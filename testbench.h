@@ -6,5 +6,9 @@ class testbench
 	void print_hello_world();
 	void image_test();
 
+	void findhomographymatix();
+
+	void NormalizeMatrix();
+
 };
 

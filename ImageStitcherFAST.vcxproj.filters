@@ -21,12 +21,33 @@
     <ClCompile Include="testbench.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Runner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="homography.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="RANSAC_algo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="testbench.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Runner.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ImageStitcherFAST.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="homography.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="RANSAC_algo.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

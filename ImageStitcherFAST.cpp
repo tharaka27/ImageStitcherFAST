@@ -2,26 +2,44 @@
 #include <iostream> 
 
 #include "testbench.h"
+#include "ImageStitcherFAST.h"
+
+#include "homography.h"
+//#include "RANSAC_algo.h"
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/stitching.hpp"
 #include "opencv2/features2d.hpp"
 #include <opencv2/calib3d.hpp>
+#include "RANSAC_algo.h"
 
 using namespace std;
 using namespace cv;
 
 
-cv::Mat calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
+
+
+cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 {
 	//-- Step 1: Detect the keypoints using FAST Detector
 	vector<KeyPoint> keypoints_object, keypoints_scene;
-	Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
-	detector->detect(gray_image1, keypoints_object, Mat());
-	detector->detect(gray_image2, keypoints_scene, Mat());
+
+	/*
+	Ptr<ORB> detector = ORB::create();
+	detector->detect(gray_image1, keypoints_object);
+	detector->detect(gray_image2, keypoints_scene);
+	*/
 	
-	cout << "Detecting keypoints using FAST detector is completed" << endl;
+	
+	Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
+	detector->detect(gray_image1, keypoints_object);
+	detector->detect(gray_image2, keypoints_scene);
+	
+
+	cout << "no of keypoints of object " << keypoints_object.size() << endl;
+	cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
+	cout << "Detecting keypoints using FAST detector is completed" << endl << endl;
 
 	//-- Step 2: Calculate descriptors (feature vectors)
 	Mat descriptors_object, descriptors_scene;
@@ -29,17 +47,26 @@ cv::Mat calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 	extractor->compute(gray_image1, keypoints_object, descriptors_object);
 	extractor->compute(gray_image2, keypoints_scene, descriptors_scene);
 
-	cout << "Calculating descriptors using ORB is completed" << endl;
+
+	cout << "no of desciptors of object " << descriptors_object.size()<< endl;
+	cout << "no of desciptors of scene " << descriptors_scene.size() << endl;
+	cout << "Calculating descriptors using ORB is completed" << endl << endl;
 
 
 	//-- Step 3: Matching descriptor vectors using FLANN matcher
-
-	cv::Ptr<DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
-	//cv::FlannBasedMatcher matcher = cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
 	std::vector< DMatch > matches;
-	matcher->match(descriptors_object, descriptors_scene, matches);
-	matcher->match(descriptors_object, descriptors_scene, matches);
 	
+	
+	cv::Ptr<DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	matcher->match(descriptors_object, descriptors_scene, matches);
+	//matcher->match(descriptors_object, descriptors_scene, matches);
+	
+	/*
+	cv::FlannBasedMatcher matcher = cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
+	matcher.match(descriptors_object, descriptors_scene, matches);
+	matcher.match(descriptors_object, descriptors_scene, matches);
+	*/
+	cout << "matches " << matches.size() << endl;
 	cout << "Matching features are completed" << endl;
 	
 	double max_dist = 0; double min_dist = 100;
@@ -61,8 +88,8 @@ cv::Mat calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 	   since 3*min_distance = 0 we could not find any good match
 	   hence the default value was set to 3 if min_dis = 0
 	*/
-	if (min_dist < 10) {
-		min_dist = 3;
+	if (min_dist < 15) {
+		min_dist = 15;
 	}
 
 	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
@@ -78,6 +105,10 @@ cv::Mat calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 			good_matches.push_back(matches[i]);
 		}
 	}
+
+	cout << "number of good matches " << good_matches.size() << endl;
+
+
 	std::vector< Point2f > obj;
 	std::vector< Point2f > scene;
 
@@ -98,16 +129,58 @@ cv::Mat calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 	}
 
 	// Find the Homography Matrix for img 1 and img2
-	H = findHomography(obj, scene, RANSAC);
+	H = findHomography(obj, scene, cv::RANSAC);
+	//cout << "Homography Calculation successfull" << endl << endl << endl<< endl;
 
-	cout << "Homography Calculation successfull" << endl;
+	cout << "Calculated homography using OPENCV:::" << endl;
+	std::cout << H<< std::endl;
 
-	return H;
+	/*
+	================================================================================
+
+									ALERT !!!!!!!
+	================================================================================
+	Extra candidate
+	
+	void findHomography(cv::Point2f src[4], cv::Point2f dst[4], float* h[3][3]);
+	
+	*/
+
+	
+	Point2f src[4];
+	Point2f dst[4];
+
+	src[0] = obj[0];
+	src[1] = obj[3];
+	src[2] = obj[2];
+	src[3] = obj[5];
+
+	dst[0] = scene[0];
+	dst[1] = scene[3];
+	dst[2] = scene[2];
+	dst[3] = scene[5];
+
+	RANSAC_algo c;
+	//c.findHomography(src, dst);
+	cv::Mat V;
+	V = c.computeHomography_RANSAC(obj,scene);
+	
+	//cout << "Calculated homography using My Impelementation:::" << endl;
+	//std::cout << V << std::endl;
+
+	/*
+	================================================================================
+
+									ALERT !!!!!!!
+	================================================================================
+	*/
+
+	return V;
 }
 
 
 
-Mat stitch_image(Mat image1, Mat image2, Mat H)
+Mat ImageStitcherFAST::stitch_image(Mat image1, Mat image2, Mat H)
 {
 	cv::Mat result;
 	// cv::Mat result23;
@@ -117,57 +190,12 @@ Mat stitch_image(Mat image1, Mat image2, Mat H)
 	return result;
 }
 
-int main()
+
+
+void ImageStitcherFAST::scale_image(cv::Mat &InputImage, cv::Mat &OutputImage, int scale_percent)
 {
-	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\left.jpg");
-	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\middle.jpg");
-	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\right.jpg");
-	
-	/*
-	  resize images since the calculation takes lots of time !!!
-	*/
-	resize(left_image,left_image,Size(640,480));
-	resize(middle_image, middle_image, Size(640, 480));
-	resize(right_image, right_image, Size(640, 480));
-
-
-	cv::imshow("left image", left_image);
-	waitKey(0);
-
-	cv::imshow("right image", middle_image);
-	waitKey(0);
-
-
-
-	Mat H12 = calculate_h_matrix(middle_image, left_image);
-	
-	
-	Mat H23 = calculate_h_matrix(right_image,middle_image);
-	
-	//Stitch right_image and middle_image and saved in img
-	Mat img = stitch_image(right_image, middle_image, H23);
-	
-
-	//Stitch middle_image and left_image and saved in img2
-	Mat img2 = stitch_image(middle_image, left_image, H12);
-
-	//Show img
-	cv::imshow("Hist_Equalized_Result of right_image and middle_image", img);
-	waitKey(0);
-
-	//Show img2
-	cv::imshow("Hist_Equalized_Result of middle_image and left_image", img2);
-	waitKey(0);
-
-
-	//Stitch(left_image and middle_image) and (right_image and middle_image)
-	Mat H123 = calculate_h_matrix(img, img2);
-	Mat img4 = stitch_image(img, img2, H123);
-
-	cv::imshow("Final Image ", img4);
-	waitKey(0);
-
-
-	
-	return 0;
+	int width = int(InputImage.cols * scale_percent / 100);
+	int height = int(InputImage.rows * scale_percent / 100);
+	cv::resize(InputImage, OutputImage, cv::Size(width, height));
 }
+
