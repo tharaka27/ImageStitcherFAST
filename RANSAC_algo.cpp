@@ -178,7 +178,7 @@ cv::Mat leastSquare_transpose(std::vector<bool> Inliers, std::vector< cv::Point2
 }
 
 
-void leastSquare(std::vector<bool> Inliers, std::vector< cv::Point2f > obj,
+cv::Mat leastSquare(std::vector<bool> Inliers, std::vector< cv::Point2f > obj,
 	std::vector< cv::Point2f > scene, int numOfIn) {
 
 
@@ -244,9 +244,9 @@ void leastSquare(std::vector<bool> Inliers, std::vector< cv::Point2f > obj,
 
 
 	cv::SVDecomp(X, W, U, Vt);
-	std::cout <<"W:"<< "[" << W.rows << "," << W.cols << "]" << std::endl;
-	std::cout <<"U:"<<"[" << U.rows << "," << U.cols << "]" << std::endl;
-	std::cout <<"Vt:"<<"[" << Vt.rows << "," << Vt.cols << "]" << std::endl;
+	//std::cout <<"W:"<< "[" << W.rows << "," << W.cols << "]" << std::endl;
+	//std::cout <<"U:"<<"[" << U.rows << "," << U.cols << "]" << std::endl;
+	//std::cout <<"Vt:"<<"[" << Vt.rows << "," << Vt.cols << "]" << std::endl;
 	//cv::SVDecomp(X, W, U, Vt, cv::SVD::FULL_UV);
 	//std::cout << W << std::endl << std::endl;
 	//std::cout << Vt << std::endl << std::endl;
@@ -256,17 +256,17 @@ void leastSquare(std::vector<bool> Inliers, std::vector< cv::Point2f > obj,
 		V.at<double>(3, 8), V.at<double>(4,8), V.at<double>(5, 8), V.at<double>(6, 8), V.at<double>(7, 8), V.at<double>(8, 8));
 	
 	//H = H / H.at<double>(2, 2);
-	std::cout << H << std::endl;
+	//std::cout << H << std::endl;
 
-	std::cout << "norm_obj.Normalization_matrix:" << "[" << norm_obj.Normalization_matrix.rows << "," << norm_obj.Normalization_matrix.cols << "]" << std::endl;
-	std::cout << "H:" << "[" << H.rows << "," << H.cols << "]" << std::endl;
-	std::cout << "norm_scene.Normalization_matrix:" << "[" << norm_scene.Normalization_matrix.rows << "," << norm_scene.Normalization_matrix.cols << "]" << std::endl;
+	//std::cout << "norm_obj.Normalization_matrix:" << "[" << norm_obj.Normalization_matrix.rows << "," << norm_obj.Normalization_matrix.cols << "]" << std::endl;
+	//std::cout << "H:" << "[" << H.rows << "," << H.cols << "]" << std::endl;
+	//std::cout << "norm_scene.Normalization_matrix:" << "[" << norm_scene.Normalization_matrix.rows << "," << norm_scene.Normalization_matrix.cols << "]" << std::endl;
 
 	//H = norm_obj.Normalization_matrix.inv() * H * norm_scene.Normalization_matrix;
 	H = norm_scene.Normalization_matrix.inv() * H * norm_obj.Normalization_matrix;
 	H = H / H.at<double>(2, 2);
 	std::cout << H << std::endl;
-
+	return H;
 }
 
 
@@ -458,11 +458,11 @@ void tuneParameters(std::vector<bool> Inliers, std::vector< cv::Point2f > obj, s
 double RANSAC_algo::GetDistance(cv::Point2f  test_src, cv::Point2f test_dst, cv::Mat H){
 	double distance = 0;
 	
-	//cv::Mat A = (cv::Mat_<double>(3, 1) << test_src.x, test_src.y, 1);
+	cv::Mat A = (cv::Mat_<double>(3, 1) << test_src.x, test_src.y, 1);
 	
 	//cv::Mat A_ = (cv::Mat_<double>(3, 1) << test_dst.x, test_dst.y, 1);
 	
-	//cv::Mat mul = (cv::Mat_<double>(3, 1) << 0,0,0);
+	cv::Mat mul = (cv::Mat_<double>(3, 1) << 0,0,0);
 
 	//------------------------------------------------------------------------------------------
 	//			Error estimation method - 1 
@@ -471,7 +471,7 @@ double RANSAC_algo::GetDistance(cv::Point2f  test_src, cv::Point2f test_dst, cv:
 
 	//cv::Mat error = (cv::Mat_<double>(3, 1) << 0,0,0);
 	
-	//cv::absdiff(A_, mul , error);
+	//error = A_ - mul;
 	// let's perform the transformation
 
 	//double error_x =   error.at<double>(0, 0) / mul.at<double>(0, 0);
@@ -495,11 +495,11 @@ double RANSAC_algo::GetDistance(cv::Point2f  test_src, cv::Point2f test_dst, cv:
 	//------------------------------------------------------------------------------------------
 	//			Error estimation method - 2 
 	//------------------------------------------------------------------------------------------
-	/*
-	mul = H * A;
-	distance = sqrt((mul.at<double>(0, 0) - A.at<double>(0, 0)) * (mul.at<double>(0, 0) - A.at<double>(0, 0)) + 
-		(mul.at<double>(1, 0) - A.at<double>(1, 0)) * (mul.at<double>(1, 0) - A.at<double>(1, 0)));
-    */
+	
+	//mul = H * A;
+	//distance = sqrt((mul.at<double>(0, 0) - A.at<double>(0, 0)) * (mul.at<double>(0, 0) - A.at<double>(0, 0)) + 
+	//	(mul.at<double>(1, 0) - A.at<double>(1, 0)) * (mul.at<double>(1, 0) - A.at<double>(1, 0)));
+    
 
 
 
@@ -513,14 +513,14 @@ double RANSAC_algo::GetDistance(cv::Point2f  test_src, cv::Point2f test_dst, cv:
 	// After that euclidean distance was calculated. 
 	//
 	
-	//double homo_x = H.at<double>(0, 0) * test_src.x + H.at<double>(0, 1) * test_src.y + H.at<double>(0, 2);
-	//double homo_y = H.at<double>(1, 0) * test_src.x + H.at<double>(1, 1) * test_src.y + H.at<double>(1, 2);
-	//double homo_z = H.at<double>(2, 0) * test_src.x + H.at<double>(2, 1) * test_src.y + H.at<double>(2, 2);
+	double homo_x = H.at<double>(0, 0) * test_src.x + H.at<double>(0, 1) * test_src.y + H.at<double>(0, 2);
+	double homo_y = H.at<double>(1, 0) * test_src.x + H.at<double>(1, 1) * test_src.y + H.at<double>(1, 2);
+	double homo_z = H.at<double>(2, 0) * test_src.x + H.at<double>(2, 1) * test_src.y + H.at<double>(2, 2);
 
-	//double est_x = homo_x / homo_z;
-	//double est_y = homo_y / homo_z;
+	double est_x = homo_x / homo_z;
+	double est_y = homo_y / homo_z;
 
-	//distance = std::sqrt( (test_dst.x - est_x)*(test_dst.x - est_x) + (test_dst.y - est_y)*(test_dst.y - est_y));
+	distance = std::sqrt( (test_dst.x - est_x)*(test_dst.x - est_x) + (test_dst.y - est_y)*(test_dst.y - est_y));
 
 	//std::cout << est_x << "," << test_dst.x << " | " << est_y << "," << test_dst.y << std::endl;
 
@@ -532,17 +532,17 @@ double RANSAC_algo::GetDistance(cv::Point2f  test_src, cv::Point2f test_dst, cv:
 	//
 	//
 	//
-	cv::Mat A = (cv::Mat_<double>(3, 1) << test_src.x, test_src.y, 1);
+	//cv::Mat A = (cv::Mat_<double>(3, 1) << test_src.x, test_src.y, 1);
 
-	cv::Mat A_ = (cv::Mat_<double>(3, 1) << test_dst.x, test_dst.y, 1);
+	//cv::Mat A_ = (cv::Mat_<double>(3, 1) << test_dst.x, test_dst.y, 1);
 
-	cv::Mat mul = (cv::Mat_<double>(3, 1) << 0,0,0);
+	//cv::Mat mul = (cv::Mat_<double>(3, 1) << 0,0,0);
 
 
-	mul = H * A;
-	distance = (mul.at<double>(0, 0) - A_.at<double>(0, 0)) * (mul.at<double>(0, 0) - A_.at<double>(0, 0)) +
-		(mul.at<double>(1, 0) - A_.at<double>(1, 0)) * (mul.at<double>(1, 0) - A_.at<double>(1, 0)) +
-		(mul.at<double>(2, 0) - A_.at<double>(2, 0)) * (mul.at<double>(2, 0) - A_.at<double>(2, 0));
+	//mul = H * A;
+	//distance = (mul.at<double>(0, 0) - A_.at<double>(0, 0)) * (mul.at<double>(0, 0) - A_.at<double>(0, 0)) +
+	//	(mul.at<double>(1, 0) - A_.at<double>(1, 0)) * (mul.at<double>(1, 0) - A_.at<double>(1, 0)) +
+	//	(mul.at<double>(2, 0) - A_.at<double>(2, 0)) * (mul.at<double>(2, 0) - A_.at<double>(2, 0));
 	
 	return distance;
 }
@@ -556,7 +556,7 @@ cv::Mat RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2f > obj, st
 	double Confidence = 0.99995;
 
 	// threshold on error metric 
-	double Threshold = 25;
+	double Threshold = 1;
 
 	// approximate expected inlier fraction
 	double ApproximateInlierFraction = 0.5;
@@ -616,7 +616,7 @@ cv::Mat RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2f > obj, st
 
 	// 4 is used since we need to find 4 data points to calculate homography correctly
 	int k = log(1 - Confidence) / log(1 - pow(ApproximateInlierFraction, 4));
-	k = 2000;
+	
 	std::cout << "iteration is :" << k << std::endl;
 
 	
@@ -746,10 +746,10 @@ cv::Mat RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2f > obj, st
 	//tuneParameters(Inliers, obj, scene, H);
 	
 	//leastSquare_transpose(Inliers, obj, scene, maxNumOfIn);
-	leastSquare(Inliers, obj, scene, maxNumOfIn);
-	std::cout << "Found from ransac algorithm good value" << std::endl;
-	std::cout << V << std::endl;
-	return V;
+	H = leastSquare(Inliers, obj, scene, maxNumOfIn);
+	//std::cout << "Found from ransac algorithm good value" << std::endl;
+	//std::cout << V << std::endl;
+	return H;
 }
 
 

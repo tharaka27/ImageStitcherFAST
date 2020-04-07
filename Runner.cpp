@@ -47,28 +47,28 @@ int main()
 	//--------------------------------------------------------------------
 
 	
-	//cv::Mat H23 = stitcher.calculate_h_matrix(right_image, middle_image);
+	cv::Mat H23 = stitcher.calculate_h_matrix(right_image, middle_image);
 
 	//Stitch right_image and middle_image and saved in img
-	//cv::Mat img = stitcher.stitch_image(right_image, middle_image, H23);
+	cv::Mat img = stitcher.stitch_image(right_image, middle_image, H23);
 
 
 	//Stitch middle_image and left_image and saved in img2
-	//cv::Mat img2 = stitcher.stitch_image(left_flipped, middle_flipped, H12);
+	cv::Mat img2 = stitcher.stitch_image(left_flipped, middle_flipped, H12);
 
 	//cv::imshow("Final Image ", img2);
 	//cv::waitKey(0);
 
 	
-	//cv::flip(img2, img2, 1);
+	cv::flip(img2, img2, 1);
 
 
 	//Stitch(left_image and middle_image) and (right_image and middle_image)
-	//cv::Mat H123 = stitcher.calculate_h_matrix(img, img2);
-	//cv::Mat img4 = stitcher.stitch_image(img, img2, H123);
+	cv::Mat H123 = stitcher.calculate_h_matrix(img, img2);
+	cv::Mat img4 = stitcher.stitch_image(img, img2, H123);
 
-	//cv::imshow("Final Image ", img4);
-	//cv::waitKey(0);
+	cv::imshow("Final Image ", img4);
+	cv::waitKey(0);
 
 	
 	
