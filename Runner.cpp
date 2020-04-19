@@ -16,9 +16,9 @@
 int main()
 {
 	
-	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
-	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\middle.jpg");
-	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\right.jpg");
+	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\left.jpg");
+	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\middle.jpg");
+	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\right.jpg");
 
 	ImageStitcherFAST stitcher;
 	
@@ -30,6 +30,7 @@ int main()
 	stitcher.scale_image(right_image, right_image, scale_percent);
 	//-----------------------------------------------------------------
 
+	//std::cout << middle_image.size() << std::endl;
 
 	cv::Mat left_flipped;
 	cv::Mat middle_flipped;
@@ -37,7 +38,8 @@ int main()
 
 
 	cv::flip(middle_image, middle_flipped, 1);
-
+	
+	std::cout << middle_image.type() << std::endl;
 
 	//--------------------------------------------------------------------
 
@@ -56,28 +58,46 @@ int main()
 	//Stitch middle_image and left_image and saved in img2
 	cv::Mat img2 = stitcher.stitch_image(left_flipped, middle_flipped, H12);
 
-	//cv::imshow("Final Image ", img2);
-	//cv::waitKey(0);
+	//cv::imshow("Image 2 ", img2);
+	///cv::waitKey(0);
 
+	//cv::imshow("Image 1 ", img);
+	//cv::waitKey(0);
 	
 	cv::flip(img2, img2, 1);
+	//cv::imshow("Image 2 ", img2);
+	//cv::waitKey(0);
 
 
-	//Stitch(left_image and middle_image) and (right_image and middle_image)
-	cv::Mat H123 = stitcher.calculate_h_matrix(img, img2);
-	cv::Mat img4 = stitcher.stitch_image(img, img2, H123);
-
-	cv::imshow("Final Image ", img4);
-	cv::waitKey(0);
-
-	
-	
 	/*
-	testbench v;
-	v.findhomographymatix();
-	v.NormalizeMatrix();
+	cv::Mat image_temp1 = img(cv:: Rect(0, 0, img.cols, img.rows / 2)).clone();
+	cv::Mat image_temp2 = img(cv::Rect(0, img.rows / 2, img.cols, img.rows / 2)).clone();
+	
+	cv::Mat result(img.rows, img.cols);
+	image_temp1.copyTo(result(Rect(0, 0, image.cols, image.rows / 2)));
+	image_temp2.copyTo(result(Rect(0, image.rows / 2, image.cols, image.rows / 2));
 	*/
+	
 
+
+	cv::Mat result(middle_image.rows, left_image.cols + middle_image.cols + right_image.cols, CV_8UC3);
+	img2.copyTo(result.colRange(0,left_image.cols + middle_image.cols));
+	img.copyTo(result.colRange(left_image.cols, left_image.cols + middle_image.cols + right_image.cols));
+	
+	//std::cout << result.size() << std::endl;
+	cv::imshow("result ", result);
+	cv::waitKey(0);
+	
+
+	testbench v;
+	//v.CheckRANSACMatching();
+	//v.findhomographymatix();
+	//v.NormalizeMatrix();
+	//v.isCollinear();
+	//v.ComputeH();
+	//v.CheckHomography();
+
+	
 	return 0;
 }
 

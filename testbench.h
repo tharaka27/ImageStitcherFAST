@@ -10,5 +10,12 @@ class testbench
 
 	void NormalizeMatrix();
 
+	void isCollinear();
+
+	void ComputeH();
+
+	void CheckHomography();
+	void CheckRANSACMatching();
+	void CheckRANSACHMatrix();
 };
 

@@ -1,3 +1,21 @@
+/*
+
+
+   Copyright (c) 2020, Tharaka Ratnayake, email: tharakasachintha.17@cse.mrt.ac.lk
+   All rights reserved. https://github.com/tharaka27/ImageStitcherFAST
+
+   Some algorithms used in this code referred to:
+   1. OpenCV: http://opencv.org/
+
+
+
+   Revision history:
+	  March 30th, 2020: initial version.
+
+*/
+
+
+
 #include <stdio.h>
 #include <iostream> 
 
@@ -5,7 +23,7 @@
 #include "ImageStitcherFAST.h"
 
 #include "homography.h"
-//#include "RANSAC_algo.h"
+
 
 #include "opencv2/core/core.hpp"
 #include "opencv2/highgui/highgui.hpp"
@@ -19,7 +37,6 @@ using namespace cv;
 
 
 
-
 cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 {
 	//-- Step 1: Detect the keypoints using FAST Detector
@@ -30,12 +47,12 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	detector->detect(gray_image1, keypoints_object);
 	detector->detect(gray_image2, keypoints_scene);
 	*/
-	
-	
+
+
 	Ptr<FastFeatureDetector> detector = FastFeatureDetector::create();
 	detector->detect(gray_image1, keypoints_object);
 	detector->detect(gray_image2, keypoints_scene);
-	
+
 
 	cout << "no of keypoints of object " << keypoints_object.size() << endl;
 	cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
@@ -48,27 +65,20 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	extractor->compute(gray_image2, keypoints_scene, descriptors_scene);
 
 
-	cout << "no of desciptors of object " << descriptors_object.size()<< endl;
+	cout << "no of desciptors of object " << descriptors_object.size() << endl;
 	cout << "no of desciptors of scene " << descriptors_scene.size() << endl;
 	cout << "Calculating descriptors using ORB is completed" << endl << endl;
 
 
 	//-- Step 3: Matching descriptor vectors using FLANN matcher
 	std::vector< DMatch > matches;
-	
-	
+
+
 	cv::Ptr<DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
 	matcher->match(descriptors_object, descriptors_scene, matches);
 	//matcher->match(descriptors_object, descriptors_scene, matches);
-	
-	/*
-	cv::FlannBasedMatcher matcher = cv::FlannBasedMatcher(cv::makePtr<cv::flann::LshIndexParams>(12, 20, 2));
-	matcher.match(descriptors_object, descriptors_scene, matches);
-	matcher.match(descriptors_object, descriptors_scene, matches);
-	*/
-	cout << "matches " << matches.size() << endl;
-	cout << "Matching features are completed" << endl;
-	
+
+
 	double max_dist = 0; double min_dist = 100;
 
 	//-- Quick calculation of max and min distances between keypoints 
@@ -84,7 +94,7 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 
 
 	/* Exceptional case
-	   For the first time min_dist became 0 
+	   For the first time min_dist became 0
 	   since 3*min_distance = 0 we could not find any good match
 	   hence the default value was set to 3 if min_dis = 0
 	*/
@@ -106,11 +116,9 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 		}
 	}
 
-	cout << "number of good matches " << good_matches.size() << endl;
-
-
-	std::vector< Point2f > obj;
-	std::vector< Point2f > scene;
+	
+	std::vector< Point2d > obj;
+	std::vector< Point2d > scene;
 
 	for (int i = 0; i < good_matches.size(); i++)
 	{
@@ -129,53 +137,72 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	}
 
 	// Find the Homography Matrix for img 1 and img2
-	H = findHomography(obj, scene, cv::RANSAC);
-	//cout << "Homography Calculation successfull" << endl << endl << endl<< endl;
+
+
+
+	/* --------------------------------------------------------------------------------
+	
+				OpenCV RANSACK implementation
+	
+	---------------------------------------------------------------------------------
+	*/
+	cv::Mat mask;
+	H = findHomography(obj, scene, mask , cv::RANSAC);
+
+
+
+	/* --------------------------------------------------------------------------------
+
+				Tharaka First RANSAC implementation
+
+	---------------------------------------------------------------------------------
+	*/
+
+	
+
+	
+	RANSAC_algo ra;
+	struct returnRANSAC r =  ra.computeHomography_RANSAC(obj, scene);
+	std::vector< DMatch > ransac_matches;
+
+	cout << "length of Inlier mask " << r.InlierMask.size() << endl;
+
+
+
+	for (int i = 0; i < r.InlierMask.rows ; i++)
+	{
+		if (r.InlierMask.at<double>(i,0) == 1)
+		{
+			ransac_matches.push_back(good_matches[i]);
+		}
+	}
+
+	
+	cout << "number of ransac chosen matches " << ransac_matches.size() << endl;
+
+	cv::Mat output_image_all;
+	cv::drawMatches(gray_image1, keypoints_object, gray_image2, keypoints_scene, good_matches, output_image_all);
+	cv::imshow("good points", output_image_all);
+
+	cv::Mat output_image;
+	cv::drawMatches(gray_image1, keypoints_object, gray_image2, keypoints_scene, ransac_matches, output_image);
+
+	cv::imshow("RANSAC chosen points", output_image);
+	cv::waitKey(0);
+	
 
 	cout << "Calculated homography using OPENCV:::" << endl;
-	std::cout << H<< std::endl;
-
-	/*
-	================================================================================
-
-									ALERT !!!!!!!
-	================================================================================
-	Extra candidate
+	std::cout << H << std::endl;
 	
-	void findHomography(cv::Point2f src[4], cv::Point2f dst[4], float* h[3][3]);
-	
-	*/
+	cout << "Homography Calculation successfull using first implementation" << endl;
+	std::cout <<r.Hmatrix << std::endl; 
 
-	
-	Point2f src[4];
-	Point2f dst[4];
 
-	src[0] = obj[0];
-	src[1] = obj[3];
-	src[2] = obj[2];
-	src[3] = obj[5];
+	cout << "InlierCount using OPENCV:::" << endl;
+	std::cout << cv::sum(mask) << std::endl;
 
-	dst[0] = scene[0];
-	dst[1] = scene[3];
-	dst[2] = scene[2];
-	dst[3] = scene[5];
 
-	RANSAC_algo c;
-	//c.findHomography(src, dst);
-	cv::Mat V;
-	V = c.computeHomography_RANSAC(obj,scene);
-	
-	//cout << "Calculated homography using My Impelementation:::" << endl;
-	//std::cout << V << std::endl;
-
-	/*
-	================================================================================
-
-									ALERT !!!!!!!
-	================================================================================
-	*/
-
-	return V;
+	return r.Hmatrix;
 }
 
 
