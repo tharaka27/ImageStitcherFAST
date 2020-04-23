@@ -17,5 +17,8 @@ class testbench
 	void CheckHomography();
 	void CheckRANSACMatching();
 	void CheckRANSACHMatrix();
+	void ComputeAngle();
+	void TestORB();
+	void TestFull();
 };
 

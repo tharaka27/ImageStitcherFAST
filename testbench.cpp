@@ -9,7 +9,7 @@
 #include <opencv2\calib3d.hpp>
 #include "RANSAC_algo.h"
 #include "ImageStitcherFAST.h"
-
+#include "ORB.h"
 
 
 
@@ -379,6 +379,308 @@ void testbench::CheckRANSACHMatrix()
 
 	std::cout << "Calculated homography using RANSAC implementation" << std::endl;
 	std::cout << r.Hmatrix << std::endl;
+
+
+}
+
+typedef vector<bool> DescType; // type of descriptor, 256 bools
+
+
+void testbench::ComputeAngle() {
+
+	/*
+	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
+	int scale_percent = 10;
+	int width = int(left_image.cols * scale_percent / 100);
+	int height = int(left_image.rows * scale_percent / 100);
+	cv::resize(left_image, left_image, cv::Size(width, height));
+
+	std::vector<cv::KeyPoint> keypoints_object;
+	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	detector->detect(left_image, keypoints_object);
+
+
+	std::cout << "Fast detected keypoints : " << keypoints_object.size() << std::endl;
+
+	//cv::Mat image = cv::Mat_<double>(17, 17, double(1));
+	
+
+	std::cout << "First keypoint : (" << keypoints_object[500].pt.x <<"," << keypoints_object[500].pt.y << ")" << std::endl;
+
+	std::vector<cv::KeyPoint> keypoints;
+	cv::Mat descriptors;
+	keypoints.push_back(keypoints_object[500]);
+
+	cv::Ptr<cv::ORB> extractor = cv::ORB::create();
+	extractor->compute(left_image, keypoints, descriptors);
+	std::cout << descriptors << std::endl;
+	std::cout << keypoints_object[500].angle << std::endl;
+	*/
+
+
+	cv::Mat image = cv::Mat_<uchar>(15, 15, uchar(2));
+	
+	for (int i = 0; i < 15; i++) {
+		for (int j = 0; j <15; j++) {
+			image.at<uchar>(i, j) = i*i;
+		}
+	}
+	std::vector<DescType> descriptors;
+	ORB orb;
+	std::vector<cv::KeyPoint> keypoints;
+	keypoints.push_back(cv::KeyPoint(8,8,1));
+	orb.computeAngle(image, keypoints);
+	std::cout << keypoints[0].angle << std::endl;
+
+	cv::Moments M = cv::moments(image);
+	std::cout << M.m01 / M.m10 << std::endl;
+
+}
+
+
+
+void testbench::TestORB() {
+
+
+
+	// load image
+	cv::Mat left_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\left.jpg");    // load grayscale image
+	cv::Mat middle_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\middle.jpg");
+	//cv::Mat second_image = cv::imread(second_file, 0);  // load grayscale image
+
+	cv::Mat left_image;
+	cv::Mat middle_image;
+
+
+	cv::resize(left_image2, left_image2, cv::Size(), 0.2, 0.2);
+	cv::resize(middle_image2, middle_image2, cv::Size(), 0.2, 0.2);
+
+	cv::cvtColor(left_image2, left_image, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(middle_image2, middle_image, cv::COLOR_BGR2GRAY);
+
+
+	std::cout << "Channels: " << left_image2.channels() << " .Type: " << left_image2.type() << std::endl;
+	std::cout << "Channels: " << left_image.channels() << " .Type: " << left_image.type() << std::endl;
+	ImageStitcherFAST stitcher;
+
+
+	//return 0;
+
+	// plot the image
+	cv::imshow("first image", left_image);
+	// cv::imshow("second image", second_image);
+	cv::waitKey(0);
+
+	// detect FAST keypoints using threshold=40
+	vector<cv::KeyPoint> keypoints;
+	cv::FAST(left_image, keypoints, 40);
+	cout << "keypoints: " << keypoints.size() << endl;
+
+	// compute angle for each keypoint
+	ORB orb;
+	orb.computeAngle(left_image, keypoints);
+
+
+
+	// compute ORB descriptors
+	vector<DescType> descriptors;
+	orb.computeORBDesc(left_image, keypoints, descriptors);
+
+
+	// plot the keypoints
+	cv::Mat image_show;
+	cv::drawKeypoints(left_image, keypoints, image_show, cv::Scalar::all(-1),
+		cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+	cv::imshow("features", image_show);
+	// cv::imwrite("feat1.png", image_show);
+	cv::waitKey(0);
+	cout << "First image completed" << endl;
+
+	// we can also match descriptors between images
+	// same for the second
+	vector<cv::KeyPoint> keypoints2;
+	cv::FAST(middle_image, keypoints2, 40);
+	cout << "keypoints: " << keypoints2.size() << endl;
+
+	// compute angle for each keypoint
+	orb.computeAngle(middle_image, keypoints2);
+
+	// compute ORB descriptors
+	vector<DescType> descriptors2;
+	orb.computeORBDesc(middle_image, keypoints2, descriptors2);
+	cout << "Second image completed" << endl;
+
+	// find matches
+	vector<cv::DMatch> matches;
+	orb.bfMatch(descriptors, descriptors2, matches);
+	cout << "matches: " << matches.size() << endl;
+
+	//cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	//matcher->match(descriptors, descriptors2, matches);
+
+	// plot the matches
+	cv::drawMatches(left_image, keypoints, middle_image, keypoints2, matches, image_show);
+	cv::imshow("matches", image_show);
+	cv::imwrite("matches.png", image_show);
+	cv::waitKey(0);
+
+}
+
+
+
+void testbench::TestFull() {
+
+
+
+	// load image
+	cv::Mat left_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\left.jpg");    // load grayscale image
+	cv::Mat middle_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\middle.jpg");
+	//cv::Mat second_image = cv::imread(second_file, 0);  // load grayscale image
+
+	cv::Mat left_image;
+	cv::Mat middle_image;
+
+
+	cv::resize(left_image2, left_image2, cv::Size(), 0.2, 0.2);
+	cv::resize(middle_image2, middle_image2, cv::Size(), 0.2, 0.2);
+
+	cv::cvtColor(left_image2, left_image, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(middle_image2, middle_image, cv::COLOR_BGR2GRAY);
+
+
+	std::cout << "Channels: " << left_image2.channels() << " .Type: " << left_image2.type() << std::endl;
+	std::cout << "Channels: " << left_image.channels() << " .Type: " << left_image.type() << std::endl;
+	ImageStitcherFAST stitcher;
+
+
+	//return 0;
+
+	// plot the image
+	cv::imshow("first image", left_image);
+	// cv::imshow("second image", second_image);
+	cv::waitKey(0);
+
+	// detect FAST keypoints using threshold=40
+	vector<cv::KeyPoint> keypoints;
+	cv::FAST(left_image, keypoints, 40);
+	cout << "keypoints: " << keypoints.size() << endl;
+
+	// compute angle for each keypoint
+	ORB orb;
+	orb.computeAngle(left_image, keypoints);
+
+
+
+	// compute ORB descriptors
+	vector<DescType> descriptors;
+	orb.computeORBDesc(left_image, keypoints, descriptors);
+
+
+	// plot the keypoints
+	cv::Mat image_show;
+	cv::drawKeypoints(left_image, keypoints, image_show, cv::Scalar::all(-1),
+		cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+	cv::imshow("features", image_show);
+	// cv::imwrite("feat1.png", image_show);
+	cv::waitKey(0);
+	cout << "First image completed" << endl;
+
+	// we can also match descriptors between images
+	// same for the second
+	vector<cv::KeyPoint> keypoints2;
+	cv::FAST(middle_image, keypoints2, 40);
+	cout << "keypoints: " << keypoints2.size() << endl;
+
+	// compute angle for each keypoint
+	orb.computeAngle(middle_image, keypoints2);
+
+	// compute ORB descriptors
+	vector<DescType> descriptors2;
+	orb.computeORBDesc(middle_image, keypoints2, descriptors2);
+	cout << "Second image completed" << endl;
+
+	// find matches
+	vector<cv::DMatch> matches;
+	orb.bfMatch(descriptors, descriptors2, matches);
+	cout << "matches: " << matches.size() << endl;
+
+	//cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	//matcher->match(descriptors, descriptors2, matches);
+
+	// plot the matches
+	cv::drawMatches(left_image, keypoints, middle_image, keypoints2, matches, image_show);
+	cv::imshow("matches", image_show);
+	cv::imwrite("matches.png", image_show);
+	cv::waitKey(0);
+
+
+
+	std::vector< cv::Point2d > obj;
+	std::vector< cv::Point2d > scene;
+
+	for (int i = 0; i < matches.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		obj.push_back(keypoints[matches[i].queryIdx].pt);
+		scene.push_back(keypoints2[matches[i].trainIdx].pt);
+	}
+
+	cv::Mat H;
+	H = findHomography(obj, scene,cv::RANSAC);
+
+	std::cout << "Implemented ORB algoritham generated H matrix" << std::endl;
+	std::cout << H << std::endl;
+
+
+
+	//
+	//  As a test we compare the H matrix generated by our implementation vs the H
+	//  Matrix generated by the OpenCV implementation.
+	//
+	//
+
+    left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
+	middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\middle.jpg");
+	
+
+	cv::Mat left_image_gray;
+	cv::Mat middle_image_gray;
+	
+
+	//ImageStitcherFAST stitcher;
+
+	//resize images since the calculation takes lots of time !!!
+
+	int scale_percent = 10;
+	stitcher.scale_image(left_image, left_image, scale_percent);
+	stitcher.scale_image(middle_image, middle_image, scale_percent);
+	
+	//-----------------------------------------------------------------
+
+	cv::cvtColor(left_image, left_image_gray, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(middle_image, middle_image_gray, cv::COLOR_BGR2GRAY);
+	
+
+	//std::cout << middle_image.size() << std::endl;
+
+	cv::Mat left_flipped_gray;
+	cv::Mat middle_flipped_gray;
+	cv::flip(left_image_gray, left_flipped_gray, 1);
+	cv::flip(middle_image_gray, middle_flipped_gray, 1);
+
+	std::cout << middle_image_gray.type() << std::endl;
+
+	//--------------------------------------------------------------------
+
+
+	// -- lets try changing the sides since we flipped
+	cv::Mat H12 = stitcher.calculate_h_matrix(left_flipped_gray, middle_flipped_gray);
+	//--------------------------------------------------------------------
+
+	std::cout << "OpenCV ORB algoritham generated H matrix" << std::endl;
+	std::cout << H << std::endl;
+
+
 
 
 }
