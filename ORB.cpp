@@ -41,8 +41,8 @@ void ORB::computeAngle(const cv::Mat& image, vector<cv::KeyPoint>& keypoints) {
 					continue;
 				//sum_m10 += (cvRound(kp.pt.x) + i) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
 				//sum_m01 += (cvRound(kp.pt.y) + j) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
-				sum_m10 += (i) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
-				sum_m01 += (j) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
+				sum_m10 += ( i) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
+				sum_m01 += ( j) * image.at<uchar>(cvRound(kp.pt.y) + j, cvRound(kp.pt.x) + i);
 
 				
 			}

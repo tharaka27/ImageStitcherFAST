@@ -20,5 +20,6 @@ class testbench
 	void ComputeAngle();
 	void TestORB();
 	void TestFull();
+	void ORBImplementation();
 };
 

@@ -10,6 +10,7 @@
 #include "RANSAC_algo.h"
 #include "ImageStitcherFAST.h"
 #include "ORB.h"
+#include "ORBExtractor.h"
 
 
 
@@ -541,8 +542,8 @@ void testbench::TestFull() {
 	cv::Mat middle_image;
 
 
-	cv::resize(left_image2, left_image2, cv::Size(), 0.2, 0.2);
-	cv::resize(middle_image2, middle_image2, cv::Size(), 0.2, 0.2);
+	cv::resize(left_image2, left_image2, cv::Size(), 0.1, 0.1);
+	cv::resize(middle_image2, middle_image2, cv::Size(), 0.1, 0.1);
 
 	cv::cvtColor(left_image2, left_image, cv::COLOR_BGR2GRAY);
 	cv::cvtColor(middle_image2, middle_image, cv::COLOR_BGR2GRAY);
@@ -578,8 +579,7 @@ void testbench::TestFull() {
 
 	// plot the keypoints
 	cv::Mat image_show;
-	cv::drawKeypoints(left_image, keypoints, image_show, cv::Scalar::all(-1),
-		cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+	cv::drawKeypoints(left_image, keypoints, image_show, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 	cv::imshow("features", image_show);
 	// cv::imwrite("feat1.png", image_show);
 	cv::waitKey(0);
@@ -601,6 +601,8 @@ void testbench::TestFull() {
 
 	// find matches
 	vector<cv::DMatch> matches;
+
+
 	orb.bfMatch(descriptors, descriptors2, matches);
 	cout << "matches: " << matches.size() << endl;
 
@@ -678,9 +680,235 @@ void testbench::TestFull() {
 	//--------------------------------------------------------------------
 
 	std::cout << "OpenCV ORB algoritham generated H matrix" << std::endl;
-	std::cout << H << std::endl;
+	std::cout << H12 << std::endl;
 
 
 
+
+}
+
+
+void testbench::ORBImplementation() {
+
+
+
+	// load image
+	cv::Mat left_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\left.jpg");    // load grayscale image
+	cv::Mat middle_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\middle.jpg");
+	//cv::Mat second_image = cv::imread(second_file, 0);  // load grayscale image
+
+	cv::Mat left_image;
+	cv::Mat middle_image;
+
+
+	cv::resize(left_image2, left_image2, cv::Size(), 0.1, 0.1);
+	cv::resize(middle_image2, middle_image2, cv::Size(), 0.1, 0.1);
+
+	cv::cvtColor(left_image2, left_image, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(middle_image2, middle_image, cv::COLOR_BGR2GRAY);
+
+
+	std::cout << "Channels: " << left_image2.channels() << " .Type: " << left_image2.type() << std::endl;
+	std::cout << "Channels: " << left_image.channels() << " .Type: " << left_image.type() << std::endl;
+	
+
+	
+
+
+	
+	cv::Mat descriptors_object, descriptors_scene;
+
+	//detect FAST keypoints using threshold = 40
+	vector<cv::KeyPoint> keypoints_object, keypoints_scene;
+	//cv::FAST(left_image, keypoints_object, 31);
+
+	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	detector->detect(left_image, keypoints_object);
+	detector->detect(middle_image, keypoints_scene);
+
+	cv::Ptr<TORB::ORBExtractor> de = new TORB::ORBExtractor(5000, 1.2f, 8, 31, 20); //(int nfeatures, float scaleFactor, int nlevels, int iniThFAST, int minThFAST)
+	(*de)(left_image, cv::Mat(), keypoints_object, descriptors_object);
+	
+
+	// plot the keypoints
+	cv::Mat image_show;
+	//cv::drawKeypoints(left_image, keypoints, image_show, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+	//cv::imshow("features", image_show);
+	// cv::imwrite("feat1.png", image_show);
+	//cv::waitKey(0);
+	//cout << "First image completed" << endl;
+	//cout << "Descriptors" << endl;
+
+	//cout << descriptors << endl;
+	
+	
+	//cv::FAST(middle_image, keypoints_scene, 40);
+
+	//cv::Ptr<TORB::ORBExtractor> de = new TORB::ORBExtractor(10000, 1.2f, 8, 40, 20); //(int nfeatures, float scaleFactor, int nlevels, int iniThFAST, int minThFAST)
+	(*de)(middle_image, cv::Mat(), keypoints_scene, descriptors_scene);
+
+
+	std::vector< cv::DMatch > matches;
+
+	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	matcher->match(descriptors_object, descriptors_scene, matches);
+
+
+
+	double max_dist = 0; double min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < descriptors_object.rows; i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	printf("-- Max dist: %f \n", max_dist);
+	printf("-- Min dist: %f \n", min_dist);
+
+
+	// Exceptional case
+	  // For the first time min_dist became 0
+	  // since 3*min_distance = 0 we could not find any good match
+	  // hence the default value was set to 3 if min_dis = 0
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > good_matches;
+	
+	for (int i = 0; i < descriptors_object.rows; i++)
+	{
+		if (matches[i].distance < 3 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	cout << good_matches.size() << endl;
+
+	cv::drawMatches(left_image, keypoints_object, middle_image, keypoints_scene, matches, image_show);
+	cv::imshow("matches", image_show);
+	//cv::imwrite("matches.png", image_show);
+	cv::waitKey(0);
+
+
+
+	std::vector< cv::Point2d > obj;
+	std::vector< cv::Point2d > scene;
+
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		obj.push_back(keypoints_object[good_matches[i].queryIdx].pt);
+		scene.push_back(keypoints_scene[good_matches[i].trainIdx].pt);
+	}
+
+	if (obj.empty() || scene.empty()) {
+		cout << "No matches found at all....." << endl;
+
+	}
+	else {
+		cout << "Enough matches found" << endl;
+
+	}
+
+	cv::Mat mask;
+	cv::Mat H = findHomography(obj, scene, mask, cv::RANSAC);
+	cout << H << endl;
+
+
+
+	//
+	//   
+	//   OpenCV implementation
+	//
+	//
+
+	//cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	detector->detect(left_image, keypoints_object);
+	detector->detect(middle_image, keypoints_scene);
+
+	//cv::Mat descriptors_object, descriptors_scene;
+	cv::Ptr<cv::ORB> extractor = cv::ORB::create();
+	extractor->compute(left_image, keypoints_object, descriptors_object);
+	extractor->compute(middle_image, keypoints_scene, descriptors_scene);
+
+	
+
+	//cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	matcher->match(descriptors_object, descriptors_scene, matches);
+
+
+
+	//double max_dist = 0; double min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < descriptors_object.rows; i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	printf("-- Max dist: %f \n", max_dist);
+	printf("-- Min dist: %f \n", min_dist);
+
+
+	// Exceptional case
+	  // For the first time min_dist became 0
+	  // since 3*min_distance = 0 we could not find any good match
+	  // hence the default value was set to 3 if min_dis = 0
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > goodcv_matches;
+
+	for (int i = 0; i < descriptors_object.rows; i++)
+	{
+		if (matches[i].distance < 3 * min_dist)
+		{
+			goodcv_matches.push_back(matches[i]);
+		}
+	}
+
+	cout << goodcv_matches.size() << endl;
+
+	cv::drawMatches(left_image, keypoints_object, middle_image, keypoints_scene, goodcv_matches, image_show);
+	cv::imshow("matches", image_show);
+	//cv::imwrite("matches.png", image_show);
+	cv::waitKey(0);
+
+
+	std::vector< cv::Point2d > objcv;
+	std::vector< cv::Point2d > scenecv;
+
+	for (int i = 0; i < goodcv_matches.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		objcv.push_back(keypoints_object[goodcv_matches[i].queryIdx].pt);
+		scenecv.push_back(keypoints_scene[goodcv_matches[i].trainIdx].pt);
+	}
+
+	if (objcv.empty() || scenecv.empty()) {
+		cout << "No matches found at all....." << endl;
+
+	}
+	else {
+		cout << "Enough matches found" << endl;
+
+	}
+
+	//cv::Mat mask;
+	cv::Mat Hcv = findHomography(objcv, scenecv, mask, cv::RANSAC);
+
+	cout << Hcv << endl;
 
 }

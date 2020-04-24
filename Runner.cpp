@@ -17,7 +17,7 @@
 
 int main()
 { 
-	/*
+	
 
 	
 	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
@@ -86,13 +86,13 @@ int main()
 	//cv::waitKey(0);
 
 
-	/*
+	
 	cv::Mat image_temp1 = img(cv:: Rect(0, 0, img.cols, img.rows / 2)).clone();
 	cv::Mat image_temp2 = img(cv::Rect(0, img.rows / 2, img.cols, img.rows / 2)).clone();
 	
-	cv::Mat result(img.rows, img.cols);
-	image_temp1.copyTo(result(Rect(0, 0, image.cols, image.rows / 2)));
-	image_temp2.copyTo(result(Rect(0, image.rows / 2, image.cols, image.rows / 2));
+	//cv::Mat result(img.rows, img.cols);
+	//image_temp1.copyTo(result(Rect(0, 0, image.cols, image.rows / 2)));
+	//image_temp2.copyTo(result(Rect(0, image.rows / 2, image.cols, image.rows / 2));
 	
 	
 
@@ -105,8 +105,8 @@ int main()
 	cv::imshow("result ", result);
 	cv::waitKey(0);
 	
-	*/
-
+	
+	/*
     
 	testbench v;
 	//v.CheckRANSACMatching();
@@ -117,7 +117,11 @@ int main()
 	//v.CheckHomography();
 	//v.ComputeAngle();
 	
-	v.TestFull();
+	//v.TestFull();
+
+	v.ORBImplementation();
+
+	*/
 	return 0;
 
 	
