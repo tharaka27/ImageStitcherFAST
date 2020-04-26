@@ -18,8 +18,8 @@
 int main()
 { 
 	
-
 	
+
 	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
 	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\middle.jpg");
 	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\right.jpg");
@@ -106,9 +106,9 @@ int main()
 	cv::waitKey(0);
 	
 	
-	/*
+	
     
-	testbench v;
+	//testbench v;
 	//v.CheckRANSACMatching();
 	//v.findhomographymatix();
 	//v.NormalizeMatrix();
@@ -116,12 +116,10 @@ int main()
 	//v.ComputeH();
 	//v.CheckHomography();
 	//v.ComputeAngle();
-	
 	//v.TestFull();
-
-	v.ORBImplementation();
-
-	*/
+	//v.ORBImplementation();
+	//v.ORBMatcherTest();
+	
 	return 0;
 
 	

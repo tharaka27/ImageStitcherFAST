@@ -11,7 +11,7 @@
 #include "ImageStitcherFAST.h"
 #include "ORB.h"
 #include "ORBExtractor.h"
-
+#include "ORBMatcher.h"
 
 
 void testbench::print_hello_world() {
@@ -910,5 +910,77 @@ void testbench::ORBImplementation() {
 	cv::Mat Hcv = findHomography(objcv, scenecv, mask, cv::RANSAC);
 
 	cout << Hcv << endl;
+
+}
+
+
+void testbench::ORBMatcherTest() {
+
+
+
+	// load image
+	cv::Mat left_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\left.jpg");    // load grayscale image
+	cv::Mat middle_image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_2\\middle.jpg");
+	//cv::Mat second_image = cv::imread(second_file, 0);  // load grayscale image
+
+	cv::Mat left_image;
+	cv::Mat middle_image;
+
+
+	cv::resize(left_image2, left_image2, cv::Size(), 0.1, 0.1);
+	cv::resize(middle_image2, middle_image2, cv::Size(), 0.1, 0.1);
+
+	cv::cvtColor(left_image2, left_image, cv::COLOR_BGR2GRAY);
+	cv::cvtColor(middle_image2, middle_image, cv::COLOR_BGR2GRAY);
+
+
+	cv::Mat descriptors_object, descriptors_scene;
+
+	//detect FAST keypoints using threshold = 40
+	vector<cv::KeyPoint> keypoints_object, keypoints_scene;
+	//cv::FAST(left_image, keypoints_object, 31);
+
+	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	detector->detect(left_image, keypoints_object);
+	detector->detect(middle_image, keypoints_scene);
+
+	cv::Ptr<TORB::ORBExtractor> de = new TORB::ORBExtractor(5000, 1.2f, 8, 31, 20); //(int nfeatures, float scaleFactor, int nlevels, int iniThFAST, int minThFAST)
+	(*de)(left_image, cv::Mat(), keypoints_object, descriptors_object);
+	(*de)(middle_image, cv::Mat(), keypoints_scene, descriptors_scene);
+
+	
+	cv::Mat image_show;
+	
+
+
+	std::vector< cv::DMatch > matches;
+	std::vector< cv::DMatch > CVmatches;
+
+    cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	matcher->match(descriptors_object, descriptors_scene, CVmatches);
+
+	cout << "Opencv matcher size: "  << CVmatches.size() << endl ;
+
+   ORBMatcher orb;
+   orb.MatchDescriptors(descriptors_object, descriptors_scene, &matches);
+
+
+   cout << "My matcher size: " << matches.size() << endl;
+
+   for (int i = 0; i < matches.size(); i++) {
+   
+	   cout << "distance: " << matches[i].distance;
+	   cout << " queryIdx: " << matches[i].queryIdx;
+	   cout << " trainIdx: " << matches[i].trainIdx << endl;
+   }
+
+   cout << "End........"<< endl;
+
+   for (int i = 0; i < CVmatches.size(); i++) {
+
+	   cout << "distance: " << CVmatches[i].distance;
+	   cout << " queryIdx: " << CVmatches[i].queryIdx;
+	   cout << " trainIdx: " << CVmatches[i].trainIdx << endl;
+   }
 
 }

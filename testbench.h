@@ -21,5 +21,6 @@ class testbench
 	void TestORB();
 	void TestFull();
 	void ORBImplementation();
+	void ORBMatcherTest();
 };
 
