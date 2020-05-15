@@ -14,17 +14,23 @@
 
 */
 
-#include "homography.h"
-
-#include "opencv2/core/core.hpp"
-
 #include <math.h>
 #include <iostream>
+#include "homography.h"
+#include "opencv2/core/core.hpp"
 
 
+
+
+// finding the solutions using gaussian elimination method
+// ported to cpp from pseudocode in
+//     http://en.wikipedia.org/wiki/Gaussian_elimination
+// input: input pointer to the array
+// n    : length of the array
+//
+//**********************************************************************
 void homography::gaussian_elimination(double* input, int n) {
-	// ported to c from pseudocode in
-	// http://en.wikipedia.org/wiki/Gaussian_elimination
+	
 
 	double* A = input;
 	int i = 0;
@@ -76,6 +82,25 @@ void homography::gaussian_elimination(double* input, int n) {
 	}
 }
 
+
+
+
+
+//**********************************************************************
+// finding the homography using 4 given points 
+//  [ X ]    [ h11 , h12, h13] [ x ]
+//  [ Y ]  = [ h21 , h22, h23]  [ y ]
+//  [ 1 ]    [ h31 , h32,   1] [ 1 ]
+// 
+// Computer hij values which satisfy above equation
+// 
+// src  cv::Point2d  4 source points
+// dst  cv::Point2d  4 destination points
+//
+//
+// NOTE:  Currently gaussian elimination is used. New mechanism
+//      will be required for optimized algorithm
+//**********************************************************************
 cv::Mat homography::findHomography_(cv::Point2d src[4], cv::Point2d dst[4]) {
 
 	double P[8][9] = {

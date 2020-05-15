@@ -414,6 +414,8 @@ returnRANSAC RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2d > ob
 	
 	
 	bool iscolinear;
+
+	auto start_loop = std::chrono::high_resolution_clock::now();
 	
 	for (int i = 0; i <= k; i++) {
 
@@ -504,6 +506,9 @@ returnRANSAC RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2d > ob
 		}
 	}
 
+	auto stop_loop = std::chrono::high_resolution_clock::now();
+	auto duration_loop = std::chrono::duration_cast<std::chrono::microseconds>(stop_loop - start_loop);
+	std::cout << "Time spent main loop which has 1000 iterations inside RANSAC calculation function: " << duration_loop.count() << std::endl;
 	//it is always a success because it is running for a certain
 	//numner of iterations
 	bSuccess = true;
@@ -513,8 +518,12 @@ returnRANSAC RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2d > ob
 
 	cv::Mat H = (cv::Mat_<double>(3, 3) << 0, 0, 0, 0, 0, 0, 0, 0, 0);
 
-	H = leastSquare(obj, scene, maxNumOfIn, inlier_mask);
 
+	auto start_ls = std::chrono::high_resolution_clock::now();
+	H = leastSquare(obj, scene, maxNumOfIn, inlier_mask);
+	auto stop_ls = std::chrono::high_resolution_clock::now();
+	auto duration_ls = std::chrono::duration_cast<std::chrono::microseconds>(stop_ls - start_ls);
+	std::cout << "Time spent inside 'least square' function: " << duration_ls.count() << std::endl;
 	struct returnRANSAC r;
 	r.Hmatrix = H;
 	r.InlierMask = inlier_mask;

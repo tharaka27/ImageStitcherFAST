@@ -1,3 +1,16 @@
+/*
+
+
+   Copyright (c) 2020, Tharaka Ratnayake, email: tharakasachintha.17@cse.mrt.ac.lk
+   All rights reserved. https://github.com/tharaka27/ImageStitcherFAST
+
+   
+
+
+
+   Revision history:
+	  March 30th, 2020: initial version.
+*/
 
 
 #include "Runner.h"
@@ -108,7 +121,7 @@ int main()
 	
 	
     
-	//testbench v;
+	testbench v;
 	//v.CheckRANSACMatching();
 	//v.findhomographymatix();
 	//v.NormalizeMatrix();

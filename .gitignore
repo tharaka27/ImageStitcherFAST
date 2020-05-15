@@ -30,3 +30,23 @@
 *.exe
 *.out
 *.app
+
+# Visual Studion related files
+*.suo
+*.db
+*.opendb
+*.ipch
+*.testlog
+*.tlog
+*.idb
+*.pdb
+*.log
+*.vcxproj
+*.filters
+*.manifest
+*.enc
+*.ilk
+*.exp
+*.obj
+
+

@@ -30,6 +30,12 @@
     <ClCompile Include="RANSAC_algo.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="ORBExtractor.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="ORBMatcher.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="resource.h">
@@ -48,6 +54,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="RANSAC_algo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ORBExtractor.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ORBMatcher.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

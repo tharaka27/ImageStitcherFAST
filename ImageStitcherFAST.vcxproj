@@ -161,6 +161,8 @@
   <ItemGroup>
     <ClCompile Include="homography.cpp" />
     <ClCompile Include="ImageStitcherFAST.cpp" />
+    <ClCompile Include="ORBExtractor.cpp" />
+    <ClCompile Include="ORBMatcher.cpp" />
     <ClCompile Include="RANSAC_algo.cpp" />
     <ClCompile Include="Runner.cpp" />
     <ClCompile Include="testbench.cpp" />
@@ -168,6 +170,8 @@
   <ItemGroup>
     <ClInclude Include="homography.h" />
     <ClInclude Include="ImageStitcherFAST.h" />
+    <ClInclude Include="ORBExtractor.h" />
+    <ClInclude Include="ORBMatcher.h" />
     <ClInclude Include="RANSAC_algo.h" />
     <ClInclude Include="resource.h" />
     <ClInclude Include="Runner.h" />

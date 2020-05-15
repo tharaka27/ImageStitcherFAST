@@ -1,3 +1,19 @@
+/*
+
+
+   Copyright (c) 2020, Tharaka Ratnayake, email: tharakasachintha.17@cse.mrt.ac.lk
+   All rights reserved. https://github.com/tharaka27/ImageStitcherFAST
+
+   Some algorithms used in this code referred to:
+   1. OpenCV: http://opencv.org/
+
+
+
+   Revision history:
+	  April 24th, 2020: initial version.
+*/
+
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/features2d/features2d.hpp>
