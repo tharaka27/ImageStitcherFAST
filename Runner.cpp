@@ -33,9 +33,9 @@ int main()
 	
 	
 
-	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\left.jpg");
-	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\middle.jpg");
-	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_3\\right.jpg");
+	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg");
+	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg");
+	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\right_r.jpg");
 
 
 	cv::Mat left_image_gray;
@@ -46,10 +46,10 @@ int main()
 	
 	//resize images since the calculation takes lots of time !!!
 	
-	int scale_percent = 10;
-	stitcher.scale_image(left_image, left_image, scale_percent);
-	stitcher.scale_image(middle_image, middle_image, scale_percent);
-	stitcher.scale_image(right_image, right_image, scale_percent);
+	//int scale_percent = 10;
+	//stitcher.scale_image(left_image, left_image, scale_percent);
+	//stitcher.scale_image(middle_image, middle_image, scale_percent);
+	//stitcher.scale_image(right_image, right_image, scale_percent);
 	//-----------------------------------------------------------------
 
 	cv::cvtColor(left_image, left_image_gray, cv::COLOR_BGR2GRAY);
@@ -57,7 +57,7 @@ int main()
 	cv::cvtColor(right_image, right_image_gray, cv::COLOR_BGR2GRAY);
 
 
-	//std::cout << middle_image.size() << std::endl;
+	std::cout << middle_image.size() << std::endl;
 
 	cv::Mat left_flipped_gray;
 	cv::Mat middle_flipped_gray;

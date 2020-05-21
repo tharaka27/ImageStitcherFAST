@@ -45,30 +45,17 @@ using namespace std;
 
 cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_image2)
 {
-	// timing
-	auto start = std::chrono::high_resolution_clock::now();
-
+	
 	//-- Step 1: Detect the keypoints using FAST Detector
 	vector<cv::KeyPoint> keypoints_object, keypoints_scene;
 
 
 	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
 
-	auto start_fast1 = std::chrono::high_resolution_clock::now();
-	detector->detect(gray_image1, keypoints_object);
-	auto stop_fast1 = std::chrono::high_resolution_clock::now();
-	auto duration_fast1 = std::chrono::duration_cast<std::chrono::microseconds>(stop_fast1 - start_fast1);
-	std::cout << "Time spent inside 'Fast feature matching' function for first image: " << duration_fast1.count() << std::endl;
-
-
-	auto start_fast2 = std::chrono::high_resolution_clock::now();
-	detector->detect(gray_image2, keypoints_scene);
-	auto stop_fast2 = std::chrono::high_resolution_clock::now();
-	auto duration_fast2 = std::chrono::duration_cast<std::chrono::microseconds>(stop_fast2 - start_fast2);
-	std::cout << "Time spent inside 'Fast feature matching' function for second image: " << duration_fast2.count() << std::endl;
-
 	
-
+	detector->detect(gray_image1, keypoints_object);
+	detector->detect(gray_image2, keypoints_scene);
+	
 	cout << "no of keypoints of object " << keypoints_object.size() << endl;
 	cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
 	cout << "Detecting keypoints using FAST detector is completed" << endl << endl;
@@ -90,19 +77,12 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 
 	TORB::ORBExtractor orbextractor(1000, 1.2, 8, 31, 20);
 
-	auto start_orb1 = std::chrono::high_resolution_clock::now();
+	
 	orbextractor(gray_image1, cv::Mat(), keypoints_object, descriptors_object);
-	auto stop_orb1 = std::chrono::high_resolution_clock::now();
-	auto duration_orb1 = std::chrono::duration_cast<std::chrono::microseconds>(stop_orb1 - start_orb1);
-	std::cout << "Time spent inside 'ORB feature extracting' function for first image: " << duration_orb1.count() << std::endl;
-
-	auto start_orb2 = std::chrono::high_resolution_clock::now();
+	
+	
 	orbextractor(gray_image2, cv::Mat(), keypoints_scene, descriptors_scene);
-	auto stop_orb2 = std::chrono::high_resolution_clock::now();
-	auto duration_orb2 = std::chrono::duration_cast<std::chrono::microseconds>(stop_orb2 - start_orb2 );
-	std::cout << "Time spent inside 'ORB feature extracting' function for second image: " << duration_orb2.count() << std::endl;
-
-
+	
 	cout << "no of desciptors of object " << descriptors_object.size() << endl;
 	cout << "no of desciptors of scene " << descriptors_scene.size() << endl;
 	cout << "Calculating descriptors using ORB is completed" << endl << endl;
@@ -119,13 +99,10 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 
 	ORBMatcher orb;
 
-	auto start_match = std::chrono::high_resolution_clock::now();
+
 	orb.MatchDescriptors(descriptors_object, descriptors_scene, &matches);
 	cout << "Matching the descriptors was successful" << endl << endl;
-	auto stop_match= std::chrono::high_resolution_clock::now();
-	auto duration_match = std::chrono::duration_cast<std::chrono::microseconds>(stop_match - start_match);
-	std::cout << "Time spent inside 'ORB feature matching' function: " << duration_match.count() << std::endl;
-
+	
 
 	cv::Mat H;
 
@@ -212,18 +189,10 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	
 	RANSAC_algo ra;
 
-	auto start_RANSAC = std::chrono::high_resolution_clock::now();
-	struct returnRANSAC r = ra.computeHomography_RANSAC(obj, scene);
-	auto stop_RANSAC = std::chrono::high_resolution_clock::now();
-	auto duration_RANSAC = std::chrono::duration_cast<std::chrono::microseconds>(stop_RANSAC - start_RANSAC);
-	std::cout << "Time spent inside 'RANSAC' function: " << duration_RANSAC.count() << std::endl;
-
-
-
-	auto stop = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(stop - start);
-	std::cout << "Time spent inside 'calculate h matrix' function: " << duration.count() << std::endl;
 	
+	struct returnRANSAC r = ra.computeHomography_RANSAC(obj, scene);
+	
+
 	return r.Hmatrix;
 
 
@@ -236,16 +205,12 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 cv::Mat ImageStitcherFAST::stitch_image(cv::Mat image1, cv::Mat image2, cv::Mat H)
 {  
 
-	auto start_stitch = std::chrono::high_resolution_clock::now();
+	
 	cv::Mat result;
 	// cv::Mat result23;
 	warpPerspective(image1, result, H, cv::Size(image1.cols + image2.cols, image1.rows));
 	cv::Mat half(result, cv::Rect(0, 0, image2.cols, image2.rows));
 	image2.copyTo(half);
-
-	auto stop_stitch = std::chrono::high_resolution_clock::now();
-	auto duration_stitch = std::chrono::duration_cast<std::chrono::microseconds>(stop_stitch - start_stitch);
-	std::cout << "Time spent inside 'stitch_image' function: " << duration_stitch.count() << std::endl;
 
 	return result;
 }
