@@ -67,14 +67,14 @@ void testbench::findhomographymatix() {
 
 	cv::Mat h = homo.findHomography_(src,dst);
 
-	cv::Mat obj = (cv::Mat_<float>(4, 2) << 141, 131, 480, 159, 493, 630, 64, 601);
-	cv::Mat scene = (cv::Mat_<float>(4, 2) << 318, 256, 534, 372, 316, 670, 73, 473);
+	//cv::Mat obj = (cv::Mat_<float>(4, 2) << 141, 131, 480, 159, 493, 630, 64, 601);
+	//cv::Mat scene = (cv::Mat_<float>(4, 2) << 318, 256, 534, 372, 316, 670, 73, 473);
 
-	cv::Mat H = findHomography(obj, scene, cv::RANSAC);
-	std::cout << "homograph Matrix from opencv RANSAC implementation" << std::endl;
-	std::cout << H << std::endl;
-	std::cout << "homograph Matrix from gussian elemenation implementation" << std::endl;
-	std::cout << h << std::endl;
+	//cv::Mat H = findHomography(obj, scene, cv::RANSAC);
+	//std::cout << "homograph Matrix from opencv RANSAC implementation" << std::endl;
+	//std::cout << H << std::endl;
+	//std::cout << "homograph Matrix from gussian elemenation implementation" << std::endl;
+	//std::cout << h << std::endl;
 
 }
 

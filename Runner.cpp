@@ -123,7 +123,6 @@ int main()
     
 	testbench v;
 	//v.CheckRANSACMatching();
-	//v.findhomographymatix();
 	//v.NormalizeMatrix();
 	//v.isCollinear();
 	//v.ComputeH();

@@ -468,8 +468,13 @@ returnRANSAC RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2d > ob
 		// let's calculate the homography matirx (exact) using the four random points.
 		homography c;
 		cv::Mat H = (cv::Mat_<double>(3, 3) << 0, 0, 0, 0, 0, 0, 0, 0, 0);
-			
+		
+		auto start_fast1 = std::chrono::high_resolution_clock::now();
 		H = c.findHomography_(src, dst);
+		auto stop_fast1 = std::chrono::high_resolution_clock::now();
+		auto duration_fast1 = std::chrono::duration_cast<std::chrono::microseconds>(stop_fast1 - start_fast1);
+		std::cout << "Time spent for homography calculation using gussian elimination: " << duration_fast1.count() << std::endl;
+		
 		
 		//reset the number of inliner for the nex iteration
 		numOfIn = 0;
@@ -481,7 +486,12 @@ returnRANSAC RANSAC_algo::computeHomography_RANSAC(std::vector< cv::Point2d > ob
 
 		double dist_std ;
 
-		numOfIn = ComputeNumberOfInliers( obj.size(),H, obj, scene, &Temp_inlier_mask, &dist_std);
+		
+		auto start_in = std::chrono::high_resolution_clock::now();
+		numOfIn = ComputeNumberOfInliers(obj.size(), H, obj, scene, &Temp_inlier_mask, &dist_std);
+		auto stop_in = std::chrono::high_resolution_clock::now();
+		auto duration_in = std::chrono::duration_cast<std::chrono::microseconds>(stop_in - start_in);
+		std::cout << "Time spent for compute number of Inliers: " << duration_in.count() << std::endl;
 
 		//save the maximum number of inliners found in the data set and the points that form them
 		if (maxNumOfIn < numOfIn) {
