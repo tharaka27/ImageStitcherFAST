@@ -29,6 +29,8 @@
 #include "ORBExtractor.h"
 #include "ORBMatcher.h"
 
+#include "ORBExtractorHLS.h"
+
 void testbench::print_hello_world() {
 	std::cout << "hello world " << std::endl;
 }
@@ -698,5 +700,28 @@ void testbench::ORBMatcherTest() {
 	   std::cout << " queryIdx: " << CVmatches[i].queryIdx;
 	   std::cout << " trainIdx: " << CVmatches[i].trainIdx << std::endl;
    }
+
+}
+
+void testbench::ORBHLS()
+{
+
+	cv::Mat image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg",0);
+
+	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	std::vector<cv::KeyPoint> keypoints_vector;
+
+	detector->detect(image, keypoints_vector);
+
+	const int NUM_KEYPOINTS = 1000 ;
+	cv::KeyPoint keypoints_array[1000];
+	for (int i = 0; i < 1000; i++) {
+		keypoints_array[i] = keypoints_vector.at(i);
+	}
+
+	cv::Mat descriptor;
+	
+	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image, keypoints_array, descriptor,1.2);
+
 
 }

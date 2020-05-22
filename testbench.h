@@ -22,5 +22,7 @@ class testbench
 	void TestFull();
 	void ORBImplementation();
 	void ORBMatcherTest();
+
+	void ORBHLS();
 };
 

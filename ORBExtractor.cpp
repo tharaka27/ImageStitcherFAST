@@ -63,9 +63,7 @@ namespace TORB {
 
 
 	const float factorPI = (float)(CV_PI / 180.f);
-	static void computeOrbDescriptor(const cv::KeyPoint& kpt,
-		const cv::Mat& img, const cv::Point* pattern,
-		uchar* desc)
+	static void computeOrbDescriptor(const cv::KeyPoint& kpt, const cv::Mat& img, const cv::Point* pattern, uchar* desc)
 	{
 		float angle = (float)kpt.angle * factorPI;
 		float a = (float)cos(angle), b = (float)sin(angle);
@@ -369,10 +367,8 @@ namespace TORB {
 
 
 
-	ORBExtractor::ORBExtractor(int _nfeatures, float _scaleFactor, int _nlevels,
-		int _iniThFAST, int _minThFAST) :
-		nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels),
-		iniThFAST(_iniThFAST), minThFAST(_minThFAST)
+	ORBExtractor::ORBExtractor(int _nfeatures, float _scaleFactor, int _nlevels, int _iniThFAST, int _minThFAST) :
+		nfeatures(_nfeatures), scaleFactor(_scaleFactor), nlevels(_nlevels), iniThFAST(_iniThFAST), minThFAST(_minThFAST)
 	{
 		mvScaleFactor.resize(nlevels);
 		mvLevelSigma2.resize(nlevels);
@@ -433,8 +429,7 @@ namespace TORB {
 
 	static void computeOrientation(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, const std::vector<int>& umax)
 	{
-		for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(),
-			keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+		for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(), keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
 		{
 			keypoint->angle = IC_Angle(image, keypoint->pt, umax);
 		}
@@ -831,6 +826,9 @@ namespace TORB {
 		for (size_t i = 0; i < keypoints.size(); i++)
 			computeOrbDescriptor(keypoints[i], image, &pattern[0], descriptors.ptr((int)i));
 	}
+
+
+
 
 
 	void ORBExtractor::operator()(cv::InputArray _image, cv::InputArray _mask,

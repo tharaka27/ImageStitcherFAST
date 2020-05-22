@@ -32,7 +32,7 @@ int main()
 { 
 	
 	
-
+	/*
 	cv::Mat left_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg");
 	cv::Mat middle_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg");
 	cv::Mat right_image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\right_r.jpg");
@@ -118,7 +118,7 @@ int main()
 	cv::imshow("result ", result);
 	cv::waitKey(0);
 	
-	
+	*/
 	
     
 	testbench v;
@@ -132,7 +132,7 @@ int main()
 	//v.TestFull();
 	//v.ORBImplementation();
 	//v.ORBMatcherTest();
-	
+	v.ORBHLS();
 	return 0;
 
 	
