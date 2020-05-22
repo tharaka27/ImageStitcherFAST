@@ -91,7 +91,7 @@ void testbench::NormalizeMatrix() {
 
 	std::vector<cv::Point2f> pointsVec;
 	
-	RANSAC_algo r;
+	//RANSAC_algo r;
 	
 	pointsVec.push_back(cv::Point2f(1, 1));
 	pointsVec.push_back(cv::Point2f(0, 0));
@@ -721,7 +721,7 @@ void testbench::ORBHLS()
 
 	cv::Mat descriptor;
 	
-	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image, keypoints_array, descriptor,1.2);
+	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image, keypoints_array, descriptor, 1.2);
 
 
 }
