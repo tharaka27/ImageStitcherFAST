@@ -268,6 +268,79 @@ namespace TORBHLS {
 		7,0, 12,-2/*mean (0.127002), correlation (0.537452)*/,
 		-1,-6, 0,-11/*mean (0.127148), correlation (0.547401)*/
 	};
+	
+	template<int _nlevels, int _nfeatures, int iniThFAST, int minThFAST>
+	void ComputeKeyPointsOctTree(cv::KeyPoint  *allKeypoints, cv::Mat *mvImagePyramid)
+	{
+		const float W = 30;
+		for (int level = 0; level < _nlevels; ++level)
+		{
+			const int minBorderX = EDGE_THRESHOLD - 3;
+			const int minBorderY = minBorderX;
+			const int maxBorderX = mvImagePyramid[level].cols - EDGE_THRESHOLD + 3;
+			const int maxBorderY = mvImagePyramid[level].rows - EDGE_THRESHOLD + 3;
+
+			cv::KeyPoint vToDistributeKeys[_nfeatures*10];
+			
+			const float width = (maxBorderX - minBorderX);
+			const float height = (maxBorderY - minBorderY);
+
+			const int nCols = width / W;
+			const int nRows = height / W;
+			const int wCell = ceil(width / nCols);
+			const int hCell = ceil(height / nRows);
+	
+			for (int i = 0; i < nRows; i++)
+			{
+				const float iniY = minBorderY + i * hCell;
+				float maxY = iniY + hCell + 6;
+				if (iniY >= maxBorderY - 3)
+					continue;
+				if (maxY > maxBorderY)
+					maxY = maxBorderY;
+
+				for (int j = 0; j < nCols; j++)
+				{
+					const float iniX = minBorderX + j * wCell;
+					float maxX = iniX + wCell + 6;
+					if (iniX >= maxBorderX - 6)
+						continue;
+					if (maxX > maxBorderX)
+						maxX = maxBorderX;
+
+					std::vector<cv::KeyPoint> vKeysCell;
+
+					FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX), vKeysCell, iniThFAST, true);
+
+					if (vKeysCell.empty())
+					{
+						FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX), vKeysCell, minThFAST, true);
+					}
+
+					if (!vKeysCell.empty())
+					{
+						for (std::vector<cv::KeyPoint>::iterator vit = vKeysCell.begin(); vit != vKeysCell.end(); vit++)
+						{
+							(*vit).pt.x += j * wCell;
+							(*vit).pt.y += i * hCell;
+							vToDistributeKeys.push_back(*vit);
+						}
+					}
+
+				}
+
+
+
+
+
+
+			
+			}
+		}
+
+	}
+
+
 
 	template<int _nlevels>
 	void ComputePyramid(cv::Mat image, float* mvInvScaleFactor, cv::Mat* mvImagePyramid) {
