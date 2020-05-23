@@ -492,8 +492,7 @@ namespace TORBHLS {
 		*/
 
 		std::vector<std::vector< cv::KeyPoint>> allKeypoints;
-		ComputeKeyPointsOctTree(allKeypoints);
-
+		//ComputeKeyPointsOctTree(allKeypoints);
 
 
 

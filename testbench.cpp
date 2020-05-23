@@ -725,3 +725,118 @@ void testbench::ORBHLS()
 
 
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+static void
+HarrisResponses(const cv::Mat& img, const std::vector<cv::Rect>& layerinfo, std::vector<cv::KeyPoint>& pts, int blockSize, float harris_k)
+{
+	CV_Assert(img.type() == CV_8UC1 && blockSize * blockSize <= 2048);
+
+	size_t ptidx, ptsize = pts.size();
+
+	const uchar* ptr00 = img.ptr<uchar>();
+	int step = (int)(img.step / img.elemSize1());
+	int r = blockSize / 2;
+
+	float scale = 1.f / ((1 << 2) * blockSize * 255.f);
+	float scale_sq_sq = scale * scale * scale * scale;
+
+	cv::AutoBuffer<int> ofsbuf(blockSize * blockSize);
+	int* ofs = ofsbuf.data();
+	for (int i = 0; i < blockSize; i++)
+		for (int j = 0; j < blockSize; j++)
+			ofs[i * blockSize + j] = (int)(i * step + j);
+
+	for (ptidx = 0; ptidx < ptsize; ptidx++)
+	{
+		int x0 = cvRound(pts[ptidx].pt.x);
+		int y0 = cvRound(pts[ptidx].pt.y);
+		int z = pts[ptidx].octave;
+
+		const uchar* ptr0 = ptr00 + (y0 - r + layerinfo[z].y) * step + x0 - r + layerinfo[z].x;
+		int a = 0, b = 0, c = 0;
+
+		for (int k = 0; k < blockSize * blockSize; k++)
+		{
+			const uchar* ptr = ptr0 + ofs[k];
+			int Ix = (ptr[1] - ptr[-1]) * 2 + (ptr[-step + 1] - ptr[-step - 1]) + (ptr[step + 1] - ptr[step - 1]);
+			int Iy = (ptr[step] - ptr[-step]) * 2 + (ptr[step - 1] - ptr[-step - 1]) + (ptr[step + 1] - ptr[-step + 1]);
+			a += Ix * Ix;
+			b += Iy * Iy;
+			c += Ix * Iy;
+		}
+		pts[ptidx].response = ((float)a * b - (float)c * c - harris_k * ((float)a + b) * ((float)a + b)) * scale_sq_sq;
+	}
+}
+
+
+
+
+void testbench::response()
+{
+
+	cv::Mat image = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
+
+	std::cout << image.type();
+	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	std::vector<cv::KeyPoint> keypoints_vector;
+
+	detector->detect(image, keypoints_vector);
+	for (int i = 0; i < 10; i++) {
+		std::cout <<"response "<< keypoints_vector[i].response << "\n";
+		std::cout << "octave "<< keypoints_vector[i].octave << "\n";
+	}
+
+
+	std::vector<cv::KeyPoint> keypoints_r;
+	for (int i = 0; i < keypoints_vector.size(); i++) {
+		cv::KeyPoint j;
+		j.octave = keypoints_vector[i].octave;
+		j.pt.x = keypoints_vector[i].pt.x;
+		j.pt.y = keypoints_vector[i].pt.y;
+		keypoints_r.push_back(j);
+	}
+
+	for (int i = 0; i < 25; i++) {
+		std::cout << keypoints_vector[i].pt.x << "," << keypoints_vector[i].pt.y << "  " << keypoints_r[i].pt.x << "," << keypoints_r[i].pt.y << "\n";
+
+	}
+
+
+	std::vector<cv::Rect> layerinfo;
+
+	cv::Rect linfo(0,0, image.cols, image.rows);
+	layerinfo.push_back(linfo);
+	std::vector<cv::KeyPoint> pts;
+	//pts.push_back(keypoints_r);
+	//HarrisResponses(image, layerinfo,  pts, 7, 0.04f);
+	HarrisResponses(image, layerinfo, keypoints_r, 7, 0.04f);
+	for (int i = 0; i < 10; i++) {
+		std::cout << "response " << keypoints_r[i].response << "\n";
+		std::cout << "octave " << keypoints_r[i].octave << "\n";
+	}
+
+	for (int i = 0; i < 25; i++) {
+		std::cout << keypoints_vector[i].response << "  " << keypoints_r[i].response << "\n";
+
+	}
+
+}

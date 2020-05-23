@@ -118,8 +118,8 @@ int main()
 	cv::imshow("result ", result);
 	cv::waitKey(0);
 	
-	*/
 	
+	*/
     
 	testbench v;
 	//v.CheckRANSACMatching();
@@ -132,7 +132,9 @@ int main()
 	//v.TestFull();
 	//v.ORBImplementation();
 	//v.ORBMatcherTest();
-	v.ORBHLS();
+	//v.ORBHLS();
+
+	v.response();
 	return 0;
 
 	

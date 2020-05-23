@@ -24,5 +24,6 @@ class testbench
 	void ORBMatcherTest();
 
 	void ORBHLS();
+	void response();
 };
 

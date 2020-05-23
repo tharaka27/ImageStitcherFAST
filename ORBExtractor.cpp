@@ -496,8 +496,8 @@ namespace TORB {
 	}
 
 
-	std::vector<cv::KeyPoint> ORBExtractor::DistributeOctTree(const std::vector<cv::KeyPoint>& vToDistributeKeys, 
-		const int& minX,const int& maxX, const int& minY, const int& maxY, const int& N, const int& level)
+	std::vector<cv::KeyPoint> ORBExtractor::DistributeOctTree(const std::vector<cv::KeyPoint>& vToDistributeKeys, const int& minX,
+		const int& maxX, const int& minY, const int& maxY, const int& N, const int& level)
 	{
 		// Compute how many initial nodes   
 		const int nIni = round(static_cast<float>(maxX - minX) / (maxY - minY));
@@ -794,8 +794,8 @@ namespace TORB {
 			std::vector<cv::KeyPoint>& keypoints = allKeypoints[level];
 			keypoints.reserve(nfeatures);
 
-			keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX,
-				minBorderY, maxBorderY, mnFeaturesPerLevel[level], level);
+			//keypoints = vToDistributeKeys;
+			keypoints = DistributeOctTree(vToDistributeKeys, minBorderX, maxBorderX, minBorderY, maxBorderY, mnFeaturesPerLevel[level], level);
 
 			const int scaledPatchSize = PATCH_SIZE * mvScaleFactor[level];
 

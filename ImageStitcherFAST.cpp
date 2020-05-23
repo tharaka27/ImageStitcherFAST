@@ -50,15 +50,15 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	vector<cv::KeyPoint> keypoints_object, keypoints_scene;
 
 
-	cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+	//cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
 
 	
-	detector->detect(gray_image1, keypoints_object);
-	detector->detect(gray_image2, keypoints_scene);
+	//detector->detect(gray_image1, keypoints_object);
+	//detector->detect(gray_image2, keypoints_scene);
 	
-	cout << "no of keypoints of object " << keypoints_object.size() << endl;
-	cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
-	cout << "Detecting keypoints using FAST detector is completed" << endl << endl;
+	//cout << "no of keypoints of object " << keypoints_object.size() << endl;
+	//cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
+	//cout << "Detecting keypoints using FAST detector is completed" << endl << endl;
 
 	cv::Mat descriptors_object, descriptors_scene;
 
@@ -75,13 +75,16 @@ cv::Mat ImageStitcherFAST::calculate_h_matrix(cv::Mat gray_image1, cv::Mat gray_
 	//(*de)(gray_image2, cv::Mat(), keypoints_scene, descriptors_scene);
 
 
-	TORB::ORBExtractor orbextractor(1000, 1.2, 8, 31, 20);
+	TORB::ORBExtractor orbextractor(2000, 1.2, 8, 31, 20);
 
 	
 	orbextractor(gray_image1, cv::Mat(), keypoints_object, descriptors_object);
 	
 	
 	orbextractor(gray_image2, cv::Mat(), keypoints_scene, descriptors_scene);
+
+	cout << "no of keypoints of object " << keypoints_object.size() << endl;
+	cout << "no of keypoints of scene " << keypoints_scene.size() << endl;
 	
 	cout << "no of desciptors of object " << descriptors_object.size() << endl;
 	cout << "no of desciptors of scene " << descriptors_scene.size() << endl;
