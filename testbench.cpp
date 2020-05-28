@@ -784,6 +784,7 @@ HarrisResponses(const cv::Mat& img, const std::vector<cv::Rect>& layerinfo, std:
 			c += Ix * Iy;
 		}
 		pts[ptidx].response = ((float)a * b - (float)c * c - harris_k * ((float)a + b) * ((float)a + b)) * scale_sq_sq;
+		//pts[ptidx].response = ((float)a * b - (float)c * c - harris_k * ((float)a + b) * ((float)a + b)) * scale * scale;
 	}
 }
 
@@ -800,10 +801,10 @@ void testbench::response()
 	std::vector<cv::KeyPoint> keypoints_vector;
 
 	detector->detect(image, keypoints_vector);
-	for (int i = 0; i < 10; i++) {
-		std::cout <<"response "<< keypoints_vector[i].response << "\n";
-		std::cout << "octave "<< keypoints_vector[i].octave << "\n";
-	}
+	//for (int i = 0; i < 10; i++) {
+	//	std::cout <<"response "<< keypoints_vector[i].response << "\n";
+	//	std::cout << "octave "<< keypoints_vector[i].octave << "\n";
+	//}
 
 
 	std::vector<cv::KeyPoint> keypoints_r;
@@ -815,10 +816,9 @@ void testbench::response()
 		keypoints_r.push_back(j);
 	}
 
-	for (int i = 0; i < 25; i++) {
-		std::cout << keypoints_vector[i].pt.x << "," << keypoints_vector[i].pt.y << "  " << keypoints_r[i].pt.x << "," << keypoints_r[i].pt.y << "\n";
-
-	}
+	//for (int i = 0; i < 25; i++) {
+	//	std::cout << keypoints_vector[i].pt.x << "," << keypoints_vector[i].pt.y << "  " << keypoints_r[i].pt.x << "," << keypoints_r[i].pt.y << "\n";
+	//}
 
 
 	std::vector<cv::Rect> layerinfo;
@@ -828,15 +828,143 @@ void testbench::response()
 	std::vector<cv::KeyPoint> pts;
 	//pts.push_back(keypoints_r);
 	//HarrisResponses(image, layerinfo,  pts, 7, 0.04f);
-	HarrisResponses(image, layerinfo, keypoints_r, 7, 0.04f);
-	for (int i = 0; i < 10; i++) {
-		std::cout << "response " << keypoints_r[i].response << "\n";
-		std::cout << "octave " << keypoints_r[i].octave << "\n";
-	}
+	
+	
+	//HarrisResponses(image, layerinfo, keypoints_r, 3, 0.04f);
+	
+	//for (int i = 0; i < 10; i++) {
+	//	std::cout << "response " << keypoints_r[i].response << "\n";
+	//	std::cout << "octave " << keypoints_r[i].octave << "\n";
+	//}
 
+	//for (int i = 0; i < 25; i++) {
+	//	std::cout << keypoints_vector[i].response << "  " << keypoints_r[i].response << "\n";
+	//}
+
+	std::vector<cv::KeyPoint> draw_keypoints;
+	for (int i = 0; i < keypoints_vector.size(); i++) {
+		if (keypoints_vector[i].response == 50) {
+			draw_keypoints.push_back(keypoints_vector[i]);
+		}
+	}
+	//drawKeypoints(image, draw_keypoints, image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+
+	cv::Mat image2;
+	std::vector< cv::Point2f > corners;
+
+	
+	int maxCorners = 10;
+
+	double qualityLevel = 0.01;
+
+	double minDistance = 20.;
+
+	cv::Mat mask;
+
+	int blockSize = 3;
+
+	bool useHarrisDetector = true;
+
+	double k = 0.04;
+
+	cv::goodFeaturesToTrack(image, corners, maxCorners, qualityLevel, minDistance, mask, blockSize, useHarrisDetector, k);
+	
+
+	std::cout << corners.size() << std::endl;
+
+	cv::imshow("keypoints", image);
+	cv::waitKey(0);
+
+	//cv::imshow("keypoints", image2);
+	//cv::waitKey(0);
+
+	cv::Mat dst;
+	cv::Mat dst2;
+	cv::cornerMinEigenVal(image, dst2, blockSize, 3, cv::BORDER_DEFAULT);
+
+
+	cv::cornerHarris(image, dst, blockSize, 3, k, cv::BORDER_DEFAULT);
 	for (int i = 0; i < 25; i++) {
-		std::cout << keypoints_vector[i].response << "  " << keypoints_r[i].response << "\n";
 
+
+		std::cout << keypoints_vector[i].response << " " << dst.at<int>((int)keypoints_vector[i].pt.y, (int)keypoints_vector[i].pt.x);
+		std::cout << " " << dst2.at<int>((int)keypoints_vector[i].pt.y, (int)keypoints_vector[i].pt.x) << std::endl;
 	}
 
+	//drawKeypoints(image, draw_keypoints, image, cv::Scalar::all(-1), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+}
+
+
+
+
+
+void testbench::TestTypes()
+{
+
+	cv::Mat image1 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
+	cv::Mat image2 = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg", 0);
+	std::cout << image1.type();
+
+	std::vector<cv::KeyPoint> keypoints_image1;
+	std::vector<cv::KeyPoint> keypoints_image2;
+
+	TORB::ORBExtractor orbextractor(1000, 1.2, 8, 31, 20);
+
+	cv::Mat descriptors_object, descriptors_scene;
+
+	orbextractor(image1, cv::Mat(), keypoints_image1, descriptors_object);
+	orbextractor(image2, cv::Mat(), keypoints_image2, descriptors_scene);
+
+
+	std::vector< cv::DMatch > matches;
+
+	ORBMatcher orb;
+
+
+	orb.MatchDescriptors(descriptors_object, descriptors_scene, &matches);
+	
+	double max_dist = 0; double min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < matches.size(); i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > good_matches;
+
+	for (int i = 0; i < matches.size(); i++)
+	{
+		if (matches[i].distance < 3 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	std::vector< cv::Point2d > obj;
+	std::vector< cv::Point2d > scene;
+
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		obj.push_back(keypoints_image1[good_matches[i].queryIdx].pt);
+		scene.push_back(keypoints_image2[good_matches[i].trainIdx].pt);
+	}
+
+
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+
+		std::cout << "x:" << keypoints_image1[good_matches[i].queryIdx].pt.x << " y: " << keypoints_image1[good_matches[i].queryIdx].pt.y << " o: " << keypoints_image1[good_matches[i].queryIdx].octave;
+		std::cout << " x:" << keypoints_image2[good_matches[i].trainIdx].pt.x << " y: " << keypoints_image2[good_matches[i].trainIdx].pt.y << " o: " << keypoints_image2[good_matches[i].trainIdx].octave;
+		std::cout << "\n";
+	}
 }

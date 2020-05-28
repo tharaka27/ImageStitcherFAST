@@ -25,5 +25,7 @@ class testbench
 
 	void ORBHLS();
 	void response();
+
+	void TestTypes();
 };
 

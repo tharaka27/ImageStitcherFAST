@@ -132,9 +132,10 @@ int main()
 	//v.TestFull();
 	//v.ORBImplementation();
 	//v.ORBMatcherTest();
-	//v.ORBHLS();
+	v.ORBHLS();
 
-	v.response();
+	//v.response();
+	//v.TestTypes();
 	return 0;
 
 	

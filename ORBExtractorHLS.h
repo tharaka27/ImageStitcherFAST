@@ -9,6 +9,46 @@ namespace TORBHLS {
 	const int HALF_PATCH_SIZE = 15;
 	const int EDGE_THRESHOLD = 19;
 
+
+	static float IC_Angle(const cv::Mat& image, cv::Point2f pt, int *u_max)
+	{
+		int m_01 = 0, m_10 = 0;
+
+		const uchar* center = &image.at<uchar>(cvRound(pt.y), cvRound(pt.x));
+
+		// Treat the center line differently, v=0
+		for (int u = -HALF_PATCH_SIZE; u <= HALF_PATCH_SIZE; ++u)
+			m_10 += u * center[u];
+
+		// Go line by line in the circuI853lar patch
+		int step = (int)image.step1();
+		for (int v = 1; v <= HALF_PATCH_SIZE; ++v)
+		{
+			// Proceed over the two lines
+			int v_sum = 0;
+			int d = u_max[v];
+			for (int u = -d; u <= d; ++u)
+			{
+				int val_plus = center[u + v * step], val_minus = center[u - v * step];
+				v_sum += (val_plus - val_minus);
+				m_10 += u * (val_plus + val_minus);
+			}
+			m_01 += v * v_sum;
+		}
+
+		return cv::fastAtan2((float)m_01, (float)m_10);
+	}
+
+
+	static void computeOrientation(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, int* umax)
+	{
+		for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(), keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+		{
+			keypoint->angle = IC_Angle(image, keypoint->pt, umax);
+		}
+	}
+
+
 	static int bit_pattern_31_[256 * 4] =
 	{
 		8,-3, 9,5/*mean (0), correlation (0)*/,
@@ -269,77 +309,8 @@ namespace TORBHLS {
 		-1,-6, 0,-11/*mean (0.127148), correlation (0.547401)*/
 	};
 	
-	template<int _nlevels, int _nfeatures, int iniThFAST, int minThFAST>
-	void ComputeKeyPointsOctTree(cv::KeyPoint  *allKeypoints, cv::Mat *mvImagePyramid)
-	{
-		const float W = 30;
-		for (int level = 0; level < _nlevels; ++level)
-		{
-			const int minBorderX = EDGE_THRESHOLD - 3;
-			const int minBorderY = minBorderX;
-			const int maxBorderX = mvImagePyramid[level].cols - EDGE_THRESHOLD + 3;
-			const int maxBorderY = mvImagePyramid[level].rows - EDGE_THRESHOLD + 3;
-
-			cv::KeyPoint vToDistributeKeys[_nfeatures*10];
-			
-			const float width = (maxBorderX - minBorderX);
-			const float height = (maxBorderY - minBorderY);
-
-			const int nCols = width / W;
-			const int nRows = height / W;
-			const int wCell = ceil(width / nCols);
-			const int hCell = ceil(height / nRows);
 	
-			for (int i = 0; i < nRows; i++)
-			{
-				const float iniY = minBorderY + i * hCell;
-				float maxY = iniY + hCell + 6;
-				if (iniY >= maxBorderY - 3)
-					continue;
-				if (maxY > maxBorderY)
-					maxY = maxBorderY;
-
-				for (int j = 0; j < nCols; j++)
-				{
-					const float iniX = minBorderX + j * wCell;
-					float maxX = iniX + wCell + 6;
-					if (iniX >= maxBorderX - 6)
-						continue;
-					if (maxX > maxBorderX)
-						maxX = maxBorderX;
-
-					std::vector<cv::KeyPoint> vKeysCell;
-
-					FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX), vKeysCell, iniThFAST, true);
-
-					if (vKeysCell.empty())
-					{
-						FAST(mvImagePyramid[level].rowRange(iniY, maxY).colRange(iniX, maxX), vKeysCell, minThFAST, true);
-					}
-
-					if (!vKeysCell.empty())
-					{
-						for (std::vector<cv::KeyPoint>::iterator vit = vKeysCell.begin(); vit != vKeysCell.end(); vit++)
-						{
-							(*vit).pt.x += j * wCell;
-							(*vit).pt.y += i * hCell;
-							vToDistributeKeys.push_back(*vit);
-						}
-					}
-
-				}
-
-
-
-
-
-
-			
-			}
-		}
-
-	}
-
+	
 
 
 	template<int _nlevels>
@@ -419,6 +390,11 @@ namespace TORBHLS {
 		mnFeaturesPerLevel[_nlevels - 1] = std::max(_nfeatures - sumFeatures, 0);
 		std::cout << "good to go 5 :D\n";
 
+		//for (int i = 0; i < _nlevels ; i++) {
+		//	std::cout << "level "<< i << ": " << mnFeaturesPerLevel[i]  << "\n";
+		//}
+
+
 		//const int npoints = 512;
 		//const cv::Point* pattern0 = (const cv::Point*) bit_pattern_31_;
 
@@ -456,9 +432,18 @@ namespace TORBHLS {
 			umax[v] = v0;
 			++v0;
 		}
+
+		for (int i = 0; i < HALF_PATCH_SIZE + 2; i++) {
+			std::cout <<  umax[i] << "\n";
+		}
+
 		std::cout << "good to go 6 :D\n";
 
 
+		//std::cout << "step sizes are\n";
+		//for (int i = 0; i < _nlevels; i++) {
+		//	std::cout << "level "<< i << " : " << mvImagePyramid[i].step << "\n";
+		//}
 
 
 		/*
@@ -478,21 +463,44 @@ namespace TORBHLS {
 
 		std::cout << "good to go 7 :D\n";
 		
-		
+		//std::cout << "step sizes and scales  are\n";
+		//for (int i = 0; i < _nlevels; i++) {
+		//	std::cout << "level " << i << " : step size =" << mvImagePyramid[i].step  << " : step size =" << mvImagePyramid[i] << "\n";
+		//}
 		
 		//
 		//  Uncomment this region to view the image pyramid.
 		//
-		/*
-		for (int i = 0; i < _nlevels; i++) {
-			
-			cv::imshow( "result" , mvImagePyramid[i]);
-			cv::waitKey(0); 
-		}
-		*/
+		
+		//for (int i = 0; i < _nlevels; i++) {
+		//	
+		//	cv::imshow( "result" , mvImagePyramid[i]);
+		//	cv::waitKey(0); 
+		//}
+		
 
 		std::vector<std::vector< cv::KeyPoint>> allKeypoints;
-		//ComputeKeyPointsOctTree(allKeypoints);
+		
+		for (int i = 0; i < _nlevels; i++) {
+			
+			std::vector<cv::KeyPoint> KeypointsEachLevel;
+			cv::Ptr<cv::FastFeatureDetector> detector = cv::FastFeatureDetector::create();
+			detector->detect(mvImagePyramid[i], KeypointsEachLevel);
+
+			computeOrientation(mvImagePyramid[i], KeypointsEachLevel, umax);
+
+
+			//std::cout <<"Size : " << KeypointsEachLevel.size() << std::endl;
+			//std::cout << "successfully level :" << i  << " Completed\n";
+
+			//std::cout << " Printing 5 first angles " << std::endl;
+			//for (int j = 0; j < 5; j++) {
+			//	std::cout << KeypointsEachLevel[j].angle << std::endl;
+			//}
+			//std::cout <<" Printing successfull "<< std::endl;
+		  
+		}
+		
 
 
 
