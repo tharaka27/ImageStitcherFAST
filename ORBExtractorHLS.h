@@ -310,7 +310,45 @@ namespace TORBHLS {
 	};
 	
 	
-	
+	const float factorPI = (float)(CV_PI / 180.f);
+	static void computeOrbDescriptor(const cv::KeyPoint& kpt, const cv::Mat& img, const cv::Point* pattern, uchar* desc)
+	{
+		float angle = (float)kpt.angle * factorPI;
+		float a = (float)cos(angle), b = (float)sin(angle);
+
+		const uchar* center = &img.at<uchar>(cvRound(kpt.pt.y), cvRound(kpt.pt.x));
+		const int step = (int)img.step;
+
+#define GET_VALUE(idx) \
+        center[cvRound(pattern[idx].x*b + pattern[idx].y*a)*step + \
+               cvRound(pattern[idx].x*a - pattern[idx].y*b)]
+
+
+		for (int i = 0; i < 32; ++i, pattern += 16)
+		{
+			int t0, t1, val;
+			t0 = GET_VALUE(0); t1 = GET_VALUE(1);
+			val = t0 < t1;
+			t0 = GET_VALUE(2); t1 = GET_VALUE(3);
+			val |= (t0 < t1) << 1;
+			t0 = GET_VALUE(4); t1 = GET_VALUE(5);
+			val |= (t0 < t1) << 2;
+			t0 = GET_VALUE(6); t1 = GET_VALUE(7);
+			val |= (t0 < t1) << 3;
+			t0 = GET_VALUE(8); t1 = GET_VALUE(9);
+			val |= (t0 < t1) << 4;
+			t0 = GET_VALUE(10); t1 = GET_VALUE(11);
+			val |= (t0 < t1) << 5;
+			t0 = GET_VALUE(12); t1 = GET_VALUE(13);
+			val |= (t0 < t1) << 6;
+			t0 = GET_VALUE(14); t1 = GET_VALUE(15);
+			val |= (t0 < t1) << 7;
+
+			desc[i] = (uchar)val;
+		}
+
+#undef GET_VALUE
+	}
 
 
 	template<int _nlevels>
@@ -338,7 +376,14 @@ namespace TORBHLS {
 
 	}
 
+	static void computeDescriptors(const cv::Mat& image, std::vector<cv::KeyPoint>& keypoints, cv::Mat& descriptors,
+		const cv::Point * pattern)
+	{
+		descriptors = cv::Mat::zeros((int)keypoints.size(), 32, CV_8UC1);
 
+		for (size_t i = 0; i < keypoints.size(); i++)
+			computeOrbDescriptor(keypoints[i], image, pattern, descriptors.ptr((int)i));
+	}
 
 
 
@@ -498,13 +543,57 @@ namespace TORBHLS {
 			//	std::cout << KeypointsEachLevel[j].angle << std::endl;
 			//}
 			//std::cout <<" Printing successfull "<< std::endl;
-		  
+			allKeypoints.push_back(KeypointsEachLevel);
 		}
 		
+		std::cout << "good to go 8 :D\n";
 
 
+		int nkeypoints = 0;
+		for (int level = 0; level < _nlevels; ++level)
+			nkeypoints += (int)allKeypoints[level].size();
 
+
+		std::cout << "Keypoints found from all the levels: " << nkeypoints << " \n";
+
+		_descriptors.create(nkeypoints, 32, CV_8U);
+
+		int offset = 0;
+		for (int level = 0; level < _nlevels; ++level)
+		{
+			std::vector<cv::KeyPoint>& keypoints = allKeypoints[level];
+			int nkeypointsLevel = (int)keypoints.size();
+
+			if (nkeypointsLevel == 0)
+				continue;
+
+			// preprocess the resized image
+			cv::Mat workingMat = mvImagePyramid[level];
+			GaussianBlur(workingMat, workingMat, cv::Size(7, 7), 2, 2, cv::BORDER_REFLECT_101);
+			
+			// Compute the descriptors
+			cv::Mat desc = _descriptors.rowRange(offset, offset + nkeypointsLevel);
+			computeDescriptors(workingMat, keypoints, desc, patternT);
+			
+			offset += nkeypointsLevel;
+
+			// Scale keypoint coordinates
+			if (level != 0)
+			{
+				float scale = mvScaleFactor[level]; 
+				for (std::vector<cv::KeyPoint>::iterator keypoint = keypoints.begin(),
+					keypointEnd = keypoints.end(); keypoint != keypointEnd; ++keypoint)
+					keypoint->pt *= scale;
+			}
+			// And add the keypoints to the output
+			
+		}
+
+		std::cout << "good to go 9 :D\n";
 	}
+
+
+
 }
 
 
