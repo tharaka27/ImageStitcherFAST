@@ -719,11 +719,77 @@ void testbench::ORBHLS()
 		keypoints_array[i] = keypoints_vector.at(i);
 	}
 
-	cv::Mat descriptor;
+	cv::Mat descriptors_object_HLS;
+	std::vector<cv::KeyPoint> keypoints_vector_HLS;
+	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image, keypoints_array, &descriptors_object_HLS, 1.2, &keypoints_vector_HLS);
+	//std::cout << descriptor << std::endl;
+
+	std::cout << keypoints_vector_HLS.size() << std::endl;
+
+	std::vector<cv::KeyPoint> keypoints_vector_orb;
+	TORB::ORBExtractor orbextractor(2000, 1.2, 8, 31, 20);
+
+
+	cv::Mat descriptors_object_orb;
+	orbextractor(image, cv::Mat(), keypoints_vector_orb, descriptors_object_orb);
+
+	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	std::vector< cv::DMatch > matches;
+	matcher->match(descriptors_object_HLS, descriptors_object_orb, matches);
+	std::cout <<"Matches size is "<< matches.size() << std::endl;
+
+
+	double max_dist = 0; double min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < matches.size(); i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	printf("-- Max dist: %f \n", max_dist);
+	printf("-- Min dist: %f \n", min_dist);
+
+
+	// Exceptional case
+	  // For the first time min_dist became 0
+	  // since 3*min_distance = 0 we could not find any good match
+	  // hence the default value was set to 3 if min_dis = 0
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > good_matches;
+
+	for (int i = 0; i < matches.size(); i++)
+	{
+		if (matches[i].distance < 3 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	int count = 0;
+	for (int i = 0; i < matches.size(); i++) {
+		if (matches[i].distance == 0) {
+			count++;
+			if (count < 50) {
+				std::cout<< "x: " << keypoints_vector_HLS[matches[i].queryIdx].pt.x << " y:" <<  keypoints_vector_HLS[matches[i].queryIdx].pt.y << " and ";
+				std::cout << "x: " << keypoints_vector_orb[matches[i].trainIdx].pt.x << " y:" << keypoints_vector_orb[matches[i].trainIdx].pt.y << "\n";
+			}
+		}
+
+		
+	}
+
 	
-	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image, keypoints_array, descriptor, 1.2);
 
-
+	std::cout << "good Matches size is " << good_matches.size() << std::endl;
+	std::cout << "Num of distance zero matches are " << count << std::endl;
 }
 
 
@@ -733,6 +799,169 @@ void testbench::ORBHLS()
 
 
 
+void testbench::ORBHLS_two_Images()
+{
+
+	cv::Mat image_left = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg", 0);
+	cv::Mat image_middle = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
+	
+	std::vector<cv::KeyPoint> keypoints_vector_HLS_left, keypoints_vector_HLS_middle;
+	cv::Mat descriptors_object_HLS_left, descriptors_object_HLS_middle;
+
+	cv::KeyPoint keypoints_array[1000];
+
+	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image_left, keypoints_array, &descriptors_object_HLS_left, 1.2, &keypoints_vector_HLS_left);
+	TORBHLS::ORBExtractorHLS<1000, 8, 31, 20, 1000>(image_middle, keypoints_array, &descriptors_object_HLS_middle, 1.2, &keypoints_vector_HLS_middle);
+
+
+	cv::Ptr<cv::DescriptorMatcher> matcher = cv::DescriptorMatcher::create("BruteForce-Hamming");
+	std::vector< cv::DMatch > matches;
+	matcher->match(descriptors_object_HLS_left, descriptors_object_HLS_middle, matches);
+	//std::cout << "Matches size is " << matches.size() << std::endl;
+
+	double max_dist = 0; double min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < matches.size(); i++)
+	{
+		double dist = matches[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	printf("-- Max dist: %f \n", max_dist);
+	printf("-- Min dist: %f \n", min_dist);
+
+
+	// Exceptional case
+	  // For the first time min_dist became 0
+	  // since 3*min_distance = 0 we could not find any good match
+	  // hence the default value was set to 3 if min_dis = 0
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > good_matches;
+
+	for (int i = 0; i < matches.size(); i++)
+	{
+		if (matches[i].distance < 3 * min_dist)
+		{
+			good_matches.push_back(matches[i]);
+		}
+	}
+
+	std::cout <<"good matches found" <<good_matches.size() << std::endl;
+
+	std::vector< cv::Point2d > obj;
+	std::vector< cv::Point2d > scene;
+
+	for (int i = 0; i < good_matches.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		obj.push_back(keypoints_vector_HLS_left[good_matches[i].queryIdx].pt);
+		scene.push_back(keypoints_vector_HLS_middle[good_matches[i].trainIdx].pt);
+	}
+
+	if (obj.empty() || scene.empty()) {
+		std::cout << "No matches found at all....." << std::endl;
+		throw std::exception();
+
+	}
+	else {
+		std::cout << "Enough matches found" << std::endl;
+
+	}
+
+	cv::Mat H, mask;
+	H = findHomography(obj, scene, mask, cv::RANSAC);
+
+	std::cout << "H found by HLS implementation is \n"<< H << std::endl;
+
+
+	//=================================================================================
+	//
+	//				OpenCV implementation
+	//
+	//=================================================================================
+
+	std::vector<cv::KeyPoint> keypoints_vector_cv_left, keypoints_vector_cv_middle;
+	cv::Mat descriptors_object_cv_left, descriptors_object_cv_middle;
+
+
+	TORB::ORBExtractor orbextractor(2000, 1.2, 8, 31, 20);
+	orbextractor(image_left, cv::Mat(), keypoints_vector_cv_left, descriptors_object_cv_left);
+	orbextractor(image_middle, cv::Mat(), keypoints_vector_cv_middle, descriptors_object_cv_middle);
+
+	//-- Step 3: Matching descriptor vectors using FLANN matcher
+	std::vector< cv::DMatch > matches_cv;
+	matcher->match(descriptors_object_cv_left, descriptors_object_cv_middle, matches_cv);
+	//std::cout << "Matches size is " << matches.size() << std::endl;
+
+	max_dist = 0;  
+	min_dist = 100;
+
+	//-- Quick calculation of max and min distances between keypoints 
+	for (int i = 0; i < matches_cv.size(); i++)
+	{
+		double dist = matches_cv[i].distance;
+		if (dist < min_dist) min_dist = dist;
+		if (dist > max_dist) max_dist = dist;
+	}
+
+	printf("-- Max dist: %f \n", max_dist);
+	printf("-- Min dist: %f \n", min_dist);
+
+
+	// Exceptional case
+	  // For the first time min_dist became 0
+	  // since 3*min_distance = 0 we could not find any good match
+	  // hence the default value was set to 3 if min_dis = 0
+
+	if (min_dist < 15) {
+		min_dist = 15;
+	}
+
+	//-- Use only "good" matches (i.e. whose distance is less than 3*min_dist )
+	std::vector< cv::DMatch > good_matches_cv;
+
+	for (int i = 0; i < matches_cv.size(); i++)
+	{
+		if (matches_cv[i].distance < 3 * min_dist)
+		{
+			good_matches_cv.push_back(matches[i]);
+		}
+	}
+
+	//std::cout << "good matches found" << good_matches_cv.size() << std::endl;
+
+	std::vector< cv::Point2d > obj_cv;
+	std::vector< cv::Point2d > scene_cv;
+
+	for (int i = 0; i < good_matches_cv.size(); i++)
+	{
+		//-- Get the keypoints from the good matches
+		obj_cv.push_back(keypoints_vector_cv_left[good_matches_cv[i].queryIdx].pt);
+		scene_cv.push_back(keypoints_vector_cv_middle[good_matches_cv[i].trainIdx].pt);
+	}
+
+	if (obj_cv.empty() || scene_cv.empty()) {
+		std::cout << "No matches found at all....." << std::endl;
+		throw std::exception();
+
+	}
+	else {
+		std::cout << "Enough matches found" << std::endl;
+
+	}
+
+	cv::Mat H_cv, mask_cv;
+	H_cv = findHomography(obj_cv, scene_cv, mask_cv, cv::RANSAC);
+
+	std::cout << "H found by HLS implementation is \n" << H_cv << std::endl;
+}
 
 
 

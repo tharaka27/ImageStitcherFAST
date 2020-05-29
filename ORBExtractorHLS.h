@@ -388,7 +388,7 @@ namespace TORBHLS {
 
 
 	template<int _nfeatures, int _nlevels, int _iniThFAST, int _minThFAST, int NUM_KEYPOINTS>
-	void ORBExtractorHLS(cv::Mat _image, cv::KeyPoint _keypoints[NUM_KEYPOINTS], cv::Mat _descriptors, float _scaleFactor) {
+	void ORBExtractorHLS(cv::Mat _image, cv::KeyPoint _keypoints[NUM_KEYPOINTS], cv::Mat * _descriptors, float _scaleFactor, std::vector<cv::KeyPoint> *keypoints_out) {
 
 
 
@@ -435,9 +435,9 @@ namespace TORBHLS {
 		mnFeaturesPerLevel[_nlevels - 1] = std::max(_nfeatures - sumFeatures, 0);
 		std::cout << "good to go 5 :D\n";
 
-		//for (int i = 0; i < _nlevels ; i++) {
-		//	std::cout << "level "<< i << ": " << mnFeaturesPerLevel[i]  << "\n";
-		//}
+		for (int i = 0; i < _nlevels ; i++) {
+			std::cout << "level "<< i << ": " << mnFeaturesPerLevel[i]  << "\n";
+		}
 
 
 		//const int npoints = 512;
@@ -556,7 +556,10 @@ namespace TORBHLS {
 
 		std::cout << "Keypoints found from all the levels: " << nkeypoints << " \n";
 
-		_descriptors.create(nkeypoints, 32, CV_8U);
+		//_descriptors.create(nkeypoints, 32, CV_8U);
+		_descriptors->create(nkeypoints, 32, CV_8U);
+
+		std::vector<cv::KeyPoint> allKeypoints_vector;
 
 		int offset = 0;
 		for (int level = 0; level < _nlevels; ++level)
@@ -572,7 +575,7 @@ namespace TORBHLS {
 			GaussianBlur(workingMat, workingMat, cv::Size(7, 7), 2, 2, cv::BORDER_REFLECT_101);
 			
 			// Compute the descriptors
-			cv::Mat desc = _descriptors.rowRange(offset, offset + nkeypointsLevel);
+			cv::Mat desc = _descriptors->rowRange(offset, offset + nkeypointsLevel);
 			computeDescriptors(workingMat, keypoints, desc, patternT);
 			
 			offset += nkeypointsLevel;
@@ -586,13 +589,21 @@ namespace TORBHLS {
 					keypoint->pt *= scale;
 			}
 			// And add the keypoints to the output
-			
+			//allKeypoints_vector.insert(allKeypoints_vector.end(), keypoints.begin(), keypoints.end());
+			keypoints_out->insert(keypoints_out->end(), keypoints.begin(), keypoints.end());
 		}
 
+		
+		//std::cout << _descriptors << std::endl;
+
 		std::cout << "good to go 9 :D\n";
+
+		keypoints_out = &allKeypoints_vector;
 	}
 
 
+
+	
 
 }
 

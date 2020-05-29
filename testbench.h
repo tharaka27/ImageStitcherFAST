@@ -24,6 +24,7 @@ class testbench
 	void ORBMatcherTest();
 
 	void ORBHLS();
+	void ORBHLS_two_Images();
 	void response();
 
 	void TestTypes();
