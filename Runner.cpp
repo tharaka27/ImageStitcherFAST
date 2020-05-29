@@ -85,7 +85,7 @@ int main()
 	cv::Mat middle_flipped;
 	cv::flip(left_image, left_flipped, 1);
 	cv::flip(middle_image, middle_flipped, 1);
-	//Stitch middle_image and left_image and saved in img2
+	//Stitch middle_image and left_image and save in img2
 	cv::Mat img2 = stitcher.stitch_image(left_flipped, middle_flipped, H12);
 
 	//cv::imshow("Image 2 ", img2);

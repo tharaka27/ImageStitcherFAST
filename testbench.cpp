@@ -802,9 +802,18 @@ void testbench::ORBHLS()
 void testbench::ORBHLS_two_Images()
 {
 
-	cv::Mat image_left = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg", 0);
-	cv::Mat image_middle = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
+	cv::Mat image_l = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg", 0);
+	cv::Mat image_m = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
+
+	//cv::Mat image_left = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\left_r.jpg", 0);
+	//cv::Mat image_middle = cv::imread("C:\\Users\\ASUS\\Desktop\\sem 5 project\\ImageStitcherSIFT\\Data_FPGA\\middle_r.jpg", 0);
 	
+	cv::Mat image_left, image_middle;
+
+	cv::flip(image_l, image_left, 1);
+	cv::flip(image_m, image_middle, 1);
+
+
 	std::vector<cv::KeyPoint> keypoints_vector_HLS_left, keypoints_vector_HLS_middle;
 	cv::Mat descriptors_object_HLS_left, descriptors_object_HLS_middle;
 
@@ -931,11 +940,11 @@ void testbench::ORBHLS_two_Images()
 	{
 		if (matches_cv[i].distance < 3 * min_dist)
 		{
-			good_matches_cv.push_back(matches[i]);
+			good_matches_cv.push_back(matches_cv[i]);
 		}
 	}
 
-	//std::cout << "good matches found" << good_matches_cv.size() << std::endl;
+	std::cout << "good matches found: " << good_matches_cv.size() << std::endl;
 
 	std::vector< cv::Point2d > obj_cv;
 	std::vector< cv::Point2d > scene_cv;
@@ -960,7 +969,28 @@ void testbench::ORBHLS_two_Images()
 	cv::Mat H_cv, mask_cv;
 	H_cv = findHomography(obj_cv, scene_cv, mask_cv, cv::RANSAC);
 
-	std::cout << "H found by HLS implementation is \n" << H_cv << std::endl;
+	std::cout << "H found by CV implementation is \n" << H_cv << std::endl;
+
+
+
+
+	//cv::Mat left_flipped;
+	//cv::Mat middle_flipped;
+	//cv::flip(image_left, left_flipped, 1);
+	//cv::flip(image_middle, middle_flipped, 1);
+	ImageStitcherFAST stitcher;
+	cv::Mat img = stitcher.stitch_image(image_left, image_middle, H);
+
+
+	cv::imshow("Image 2 ", img);
+    cv::waitKey(0);
+
+
+	cv::Mat image_show;
+	cv::drawMatches(image_left, keypoints_vector_HLS_left, image_middle, keypoints_vector_HLS_middle, good_matches, image_show);
+	cv::imshow("matches", image_show);
+	//cv::imwrite("matches.png", image_show);
+	cv::waitKey(0);
 }
 
 
