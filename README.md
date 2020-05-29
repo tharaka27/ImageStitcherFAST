@@ -29,13 +29,13 @@ In following section we present the API and functionality of the above functions
 ORB extractor generate keypoints and descriptors. ORB stands for Oriented FAST Rotated Brief. In this algorithm first we find keypoints using FAST in different scales (to make scale invariant). Then we assign orientation to each keypoint. After that descriptors are calculate(Based on BRIEF)
 API:
 
-```
+```cpp
 void ORBExtractor::operator()(cv::InputArray _image, cv::InputArray _mask, std::vector<cv::KeyPoint>& _keypoints, 
                                    cv::OutputArray _descriptors)
 ```
 
 Ex Usage : 
-```
+```cpp
 TORB::ORBExtractor orbextractor(1000, 1.2, 8, 31, 20);
 
 	orbextractor(gray_image1, cv::Mat(), keypoints_object, descriptors_object);
@@ -47,12 +47,13 @@ TORB::ORBExtractor orbextractor(1000, 1.2, 8, 31, 20);
  ORB matcher matches to descriptors and return DMatches using brute force Hamming.
  API:
 
-```
+```cpp
 std::vector<int> ORBMatcher::MatchDescriptors(cv::Mat descriptors1, cv::Mat descriptors2, std::vector<cv::DMatch> *matches)
 ```
  
 Ex Usage : 
-```
+
+```cpp
 ORBMatcher orb;
 orb.MatchDescriptors(descriptors_object, descriptors_scene, &matches);	
 ```
@@ -71,7 +72,7 @@ orb.MatchDescriptors(descriptors_object, descriptors_scene, &matches);
 
 API:
 
-```
+```cpp
  /*
  @Compute the homogrphy using RANSAC Algorithm
  @Param obj std::vector to the array of points of object
@@ -88,7 +89,7 @@ API:
 
 
 Ex Usage : 
-```
+```cpp
 RANSAC_algo ra;
 struct returnRANSAC r = ra.computeHomography_RANSAC(obj, scene);
 ```
@@ -112,6 +113,6 @@ NOTE:  Currently gaussian elimination is used. New mechanism
       
  
  API :
- ```
+```cpp
 cv::Mat homography::findHomography_(cv::Point2d src[4], cv::Point2d dst[4]) 
 ```
