@@ -392,7 +392,7 @@ namespace TORBHLS {
 
 
 
-		std::cout << "good to go :D\n";
+		//std::cout << "good to go :D\n";
 
 		float mvScaleFactor[_nlevels];
 		float mvLevelSigma2[_nlevels];
@@ -404,7 +404,7 @@ namespace TORBHLS {
 			mvScaleFactor[i] = mvScaleFactor[i - 1] * _scaleFactor;
 			mvLevelSigma2[i] = mvScaleFactor[i] * mvScaleFactor[i];
 		}
-		std::cout << "good to go 2 :D\n";
+		//std::cout << "good to go 2 :D\n";
 
 		float mvInvScaleFactor[_nlevels];
 		float mvInvLevelSigma2[_nlevels];
@@ -415,7 +415,7 @@ namespace TORBHLS {
 			mvInvLevelSigma2[i] = 1.0f / mvLevelSigma2[i];
 		}
 
-		std::cout << "good to go 3 :D\n";
+		//std::cout << "good to go 3 :D\n";
 
 		cv::Mat mvImagePyramid[_nlevels];
 		int mnFeaturesPerLevel[_nlevels];
@@ -423,7 +423,7 @@ namespace TORBHLS {
 		float factor = 1.0f / _scaleFactor;
 		float nDesiredFeaturesPerScale = _nfeatures * (1 - factor) / (1 - (float)pow((double)factor, (double)_nlevels));
 
-		std::cout << "good to go 4 :D\n";
+		//std::cout << "good to go 4 :D\n";
 
 		int sumFeatures = 0;
 		for (int level = 0; level < _nlevels - 1; level++)
@@ -433,11 +433,11 @@ namespace TORBHLS {
 			nDesiredFeaturesPerScale *= factor;
 		}
 		mnFeaturesPerLevel[_nlevels - 1] = std::max(_nfeatures - sumFeatures, 0);
-		std::cout << "good to go 5 :D\n";
+		//std::cout << "good to go 5 :D\n";
 
-		for (int i = 0; i < _nlevels ; i++) {
-			std::cout << "level "<< i << ": " << mnFeaturesPerLevel[i]  << "\n";
-		}
+		//for (int i = 0; i < _nlevels ; i++) {
+		//	std::cout << "level "<< i << ": " << mnFeaturesPerLevel[i]  << "\n";
+		//}
 
 
 		//const int npoints = 512;
@@ -478,11 +478,11 @@ namespace TORBHLS {
 			++v0;
 		}
 
-		for (int i = 0; i < HALF_PATCH_SIZE + 2; i++) {
-			std::cout <<  umax[i] << "\n";
-		}
+		//for (int i = 0; i < HALF_PATCH_SIZE + 2; i++) {
+		//	std::cout <<  umax[i] << "\n";
+		//}
 
-		std::cout << "good to go 6 :D\n";
+		//std::cout << "good to go 6 :D\n";
 
 
 		//std::cout << "step sizes are\n";
@@ -506,7 +506,7 @@ namespace TORBHLS {
 		// Pre-compute the scale pyramid
 		ComputePyramid<_nlevels>(image, (float *)mvInvScaleFactor , (cv::Mat *)mvImagePyramid);
 
-		std::cout << "good to go 7 :D\n";
+		//std::cout << "good to go 7 :D\n";
 		
 		//std::cout << "step sizes and scales  are\n";
 		//for (int i = 0; i < _nlevels; i++) {
@@ -546,7 +546,7 @@ namespace TORBHLS {
 			allKeypoints.push_back(KeypointsEachLevel);
 		}
 		
-		std::cout << "good to go 8 :D\n";
+		//std::cout << "good to go 8 :D\n";
 
 
 		int nkeypoints = 0;
@@ -596,7 +596,7 @@ namespace TORBHLS {
 		
 		//std::cout << _descriptors << std::endl;
 
-		std::cout << "good to go 9 :D\n";
+		//std::cout << "good to go 9 :D\n";
 
 		keypoints_out = &allKeypoints_vector;
 	}
