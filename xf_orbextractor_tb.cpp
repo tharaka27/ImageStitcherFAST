@@ -78,13 +78,27 @@ int main(int argc, char** argv){
 			for(int j = 0; j< 640; j++){
 				if(out_gen.at<uchar>(i, j) >= 250){
 					cv::Point2f temp;
-					temp.x = i;
-					temp.y = j;
+					temp.x = j;
+					temp.y = i;
 					d.push_back(temp);
 				}
 			}
 		}
 	std::cout << "\nNumber of Keypoints found using FPGA FAST: "<< d.size();
+
+
+
+	int counter = 0;
+
+	for(int i = 0; i < kp.size(); i++){
+		for(int j =0 ; j < d.size(); j++){
+			if( kp[i].pt.x == d[j].x and kp[i].pt.y == d[j].y ){
+				counter++;
+			}
+		}
+	}
+
+	std::cout << "\nNumber of Keypoints Matches between two sets "<< counter;
 
 	return 0;
 }
