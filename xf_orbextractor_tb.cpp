@@ -17,6 +17,56 @@
 
 #include "xf_orbextractor.h"
 
+
+void FAST_accel_Test(cv::Mat out_gen, std::vector<cv::KeyPoint> kp ){
+	//std::cout << out_gen;
+	//for(int i = 0;i<5; i++){
+	//	for(int j = 0;j<5; j++){
+	//		std::cout << out_gen.at<uchar>(i, j) << "\n";
+	//	}
+	//}
+
+	for(int i=0; i < 5; i++){
+		std::cout << kp[i].pt.x << "," << kp[i].pt.y << "\n";
+	}
+
+	std::cout << "\nNumber of Keypoints found using OpenCV FAST: "<< kp.size();
+
+	std::vector<cv::Point2f> d;
+	for(int i = 0; i<480; i++){
+		for(int j = 0; j< 640; j++){
+			if(out_gen.at<uchar>(i, j) >= 250){
+				cv::Point2f temp;
+				temp.x = j;
+				temp.y = i;
+				d.push_back(temp);
+			}
+		}
+	}
+	std::cout << "\nNumber of Keypoints found using FPGA FAST: "<< d.size();
+
+
+
+	int counter = 0;
+
+	for(int i = 0; i < kp.size(); i++){
+		for(int j =0 ; j < d.size(); j++){
+			if( kp[i].pt.x == d[j].x and kp[i].pt.y == d[j].y ){
+				counter++;
+			}
+		}
+	}
+
+	std::cout << "\nNumber of Keypoints Matches between two sets "<< counter;
+
+}
+
+
+void extractor_Test(){
+
+
+}
+
 int main(int argc, char** argv){
 	//std::cout << "Tharaka" ;
 
@@ -46,17 +96,20 @@ int main(int argc, char** argv){
 	std::vector<cv::KeyPoint> kp;
 	cv::FAST(in_gray, kp, 20, true);
 
-	for(int i=0; i < 5; i++){
-		std::cout << kp[i].pt.x << "," << kp[i].pt.y << "\n";
-	}
-
-	std::cout << "\nNumber of Keypoints found using OpenCV FAST: "<< kp.size();
-
+	\
 	/////////////////////	End of OpenCV reference	 ////////////////
 
 	static xf::Mat<XF_8UC1, 480, 640, XF_NPPC1> imgInput(in_gray.rows,in_gray.cols);
 	static xf::Mat<XF_8UC1, 480, 640, XF_NPPC1> imgOutput(in_gray.rows,in_gray.cols);
 
+
+
+	//====================================================
+	//   FAST TEST
+	//
+	//===================================================
+
+	/*
 	imgInput.copyTo(in_gray.data);
 
 	FAST_accel(imgInput, imgOutput);
@@ -67,38 +120,22 @@ int main(int argc, char** argv){
 	//generated output checking
 	cv::Mat out_gen = cv::imread("C:\\Users\\ASUS\\Desktop\\EagleEye\\FastFPGA\\fastFPGA\\solution1\\csim\\build\\hls_out.jpg", 0);
 
-	//std::cout << out_gen;
-	//for(int i = 0;i<5; i++){
-	//	for(int j = 0;j<5; j++){
-	//		std::cout << out_gen.at<uchar>(i, j) << "\n";
-	//	}
-	//}
-	std::vector<cv::Point2f> d;
-	for(int i = 0; i<480; i++){
-			for(int j = 0; j< 640; j++){
-				if(out_gen.at<uchar>(i, j) >= 250){
-					cv::Point2f temp;
-					temp.x = j;
-					temp.y = i;
-					d.push_back(temp);
-				}
-			}
-		}
-	std::cout << "\nNumber of Keypoints found using FPGA FAST: "<< d.size();
+
+	FAST_accel_Test(out_gen,kp);
+    */
+
+	//====================================================
+	//
+	//     End of FAST TEST
+	//
+	//===================================================
 
 
 
-	int counter = 0;
 
-	for(int i = 0; i < kp.size(); i++){
-		for(int j =0 ; j < d.size(); j++){
-			if( kp[i].pt.x == d[j].x and kp[i].pt.y == d[j].y ){
-				counter++;
-			}
-		}
-	}
-
-	std::cout << "\nNumber of Keypoints Matches between two sets "<< counter;
 
 	return 0;
 }
+
+
+
