@@ -358,6 +358,9 @@ namespace TORBHLS {
 
 			float scale = mvInvScaleFactor[level];
 			cv::Size sz(cvRound((float)image.cols * scale), cvRound((float)image.rows * scale));
+
+			std::cout << "scale factor " << scale << "\n";
+			std::cout << "size " << cvRound((float)image.cols * scale) << ", " << cvRound((float)image.rows * scale) << "\n";
 			cv::Size wholeSize(sz.width + EDGE_THRESHOLD * 2, sz.height + EDGE_THRESHOLD * 2);
 			cv::Mat temp(wholeSize, image.type()), masktemp;
 			mvImagePyramid[level] = temp(cv::Rect(EDGE_THRESHOLD, EDGE_THRESHOLD, sz.width, sz.height));
