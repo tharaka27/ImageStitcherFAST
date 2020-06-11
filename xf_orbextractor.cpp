@@ -1,7 +1,7 @@
 
 #include "xf_orbextractor.h"
 #include "imgproc/xf_resize.hpp"
-
+#include "features/xf_fast.hpp"
 
 static int bit_pattern_31_[256 * 4] =
 	{
@@ -271,11 +271,28 @@ void FAST_accel(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src,xf::Mat<TYPE, HEIGHT, W
 
 }
 
-
+/*
 template<int src_height, int src_width, int dst_height, int dst_weight>
 void resize_accel(xf::Mat<TYPE, src_height, src_width, NPC1> &_src,xf::Mat<TYPE, dst_height, dst_weight, NPC1> &_dst){
 
 	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, src_height, src_width, dst_height, dst_weight, NPC1, 2>(_src, _dst);
+
+}
+
+
+/*
+void resize_accel(int src_height, int src_width, int dst_height, int dst_weight,xf::Mat &_src,xf::Mat &_dst){
+
+
+	xf::resize<XF_INTERPOLATION_BILINEAR, XF_8UC1, src_height, src_width, dst_height, dst_weight, XF_NPPC1, 2>(_src, _dst);
+
+}
+*/
+
+void resize_accel_2(int src_height, int src_width, int dst_height, int dst_weight,
+		xf::Mat<TYPE, src_height, src_width, NPC1> &_src,xf::Mat<TYPE,dst_height, dst_weight, NPC1> &_dst){
+
+	xf::resize<XF_INTERPOLATION_BILINEAR, XF_8UC1, src_height, src_width, dst_height, dst_weight, XF_NPPC1, 2>(_src, _dst);
 
 }
 
@@ -290,7 +307,13 @@ void computePyramid(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src){
 void extractor(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src,xf::Mat<XF_8UC1, 400, 528, XF_NPPC1> level_1,
 		xf::Mat<XF_8UC1, 444, 333, XF_NPPC1> level_2, xf::Mat<XF_8UC1, 370, 278, XF_NPPC1> level_3,
 		xf::Mat<XF_8UC1, 309, 231, XF_NPPC1> level_4, xf::Mat<XF_8UC1, 257, 193, XF_NPPC1> level_5,
-		xf::Mat<XF_8UC1, 214, 161, XF_NPPC1> level_6, xf::Mat<XF_8UC1, 179, 134, XF_NPPC1> level_7 ,float _scaleFactor){
+		xf::Mat<XF_8UC1, 214, 161, XF_NPPC1> level_6, xf::Mat<XF_8UC1, 179, 134, XF_NPPC1> level_7 ,
+		xf::Mat<XF_8UC1, 400, 528, XF_NPPC1> level_1_fast,
+		xf::Mat<XF_8UC1, 444, 333, XF_NPPC1> level_2_fast, xf::Mat<XF_8UC1, 370, 278, XF_NPPC1> level_3_fast,
+		xf::Mat<XF_8UC1, 309, 231, XF_NPPC1> level_4_fast, xf::Mat<XF_8UC1, 257, 193, XF_NPPC1> level_5_fast,
+		xf::Mat<XF_8UC1, 214, 161, XF_NPPC1> level_6_fast, xf::Mat<XF_8UC1, 179, 134, XF_NPPC1> level_7_fast ,
+
+		float _scaleFactor){
 
 
 	// Default 8 levels of pyramid is generated for the ORB scale space
@@ -349,15 +372,37 @@ void extractor(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src,xf::Mat<XF_8UC1, 400, 52
 	//xf::Mat<XF_8UC1, 214, 161, XF_NPPC1> level_6;
 	//xf::Mat<XF_8UC1, 179, 134, XF_NPPC1> level_7;
 
-	//#pragma HLS allocation instances=resize_accel limit=2 function
+	//#pragma HLS allocation instances=resize_accel limit=1 function
 
-	resize_accel<480, 640,400, 528>(_src,level_1);
-	resize_accel<480, 640,444, 333>(_src,level_2);
-	resize_accel<480, 640,370, 278>(_src,level_3);
-	resize_accel<480, 640,309, 231>(_src,level_4);
-	resize_accel<480, 640,257, 193>(_src,level_5);
-	resize_accel<480, 640,214, 161>(_src,level_6);
-	resize_accel<480, 640,179, 134>(_src,level_7);
+	//resize_accel_2(480, 640,400, 528, _src,level_1);
+	//resize_accel<480, 640,444, 333>(_src,level_2);
+	//resize_accel<480, 640,370, 278>(_src,level_3);
+	//resize_accel<480, 640,309, 231>(_src,level_4);
+	//resize_accel<480, 640,257, 193>(_src,level_5);
+	//resize_accel<480, 640,214, 161>(_src,level_6);
+	//resize_accel<480, 640,179, 134>(_src,level_7);
+
+	//#pragma HLS allocation instances=xf::resize limit=1 function
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 400, 528, NPC1, 2>(_src, level_1);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 444, 333, NPC1, 2>(_src, level_2);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 370, 278, NPC1, 2>(_src, level_3);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 309, 231, NPC1, 2>(_src, level_4);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 257, 193, NPC1, 2>(_src, level_5);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 214, 161, NPC1, 2>(_src, level_6);
+	xf::resize<XF_INTERPOLATION_BILINEAR, TYPE, 480, 640, 179, 134, NPC1, 2>(_src, level_7);
+
+
+	xf::fast<1,XF_8UC1,400, 528,NPC1>(level_1, level_1_fast, 20);
+	xf::fast<1,XF_8UC1,444, 333,NPC1>(level_2, level_2_fast, 20);
+	xf::fast<1,XF_8UC1,370, 278,NPC1>(level_3, level_3_fast, 20);
+	xf::fast<1,XF_8UC1,309, 231,NPC1>(level_4, level_4_fast, 20);
+	xf::fast<1,XF_8UC1,257, 193,NPC1>(level_5, level_5_fast, 20);
+	xf::fast<1,XF_8UC1,214, 161,NPC1>(level_6, level_6_fast, 20);
+	xf::fast<1,XF_8UC1,179, 134,NPC1>(level_7, level_7_fast, 20);
+
+
+
+
 
 
 
