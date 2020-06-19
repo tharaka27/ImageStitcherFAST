@@ -21,3 +21,28 @@ void lut_accel(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &imgInput, xf::Mat<TYPE, HEIGH
 xf::LUT< TYPE, HEIGHT, WIDTH, NPC1>(imgInput,imgOutput,lut_ptr);
 }
 ```
+
+# Modules being developed
+
+In this repository we have implemented following functions
+1. ORB Extractor
+2. ORB Matcher brute force
+3. RANSAC algorithm
+4. Homography estimation
+
+In following section we present the API and functionality of the above functions
+
+### ORB Extractor
+
+ORB extractor generate keypoints and descriptors. ORB stands for Oriented FAST Rotated Brief. In this algorithm first we find keypoints using FAST in different scales (to make scale invariant). Then we assign orientation to each keypoint. After that descriptors are calculate(Based on BRIEF)
+
+```cpp
+FAST_accel(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src,xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_dst);
+
+resize_accel_2(int src_height, int src_width, int dst_height, int dst_weight,
+		xf::Mat<TYPE, src_height, src_width, NPC1> &_src,xf::Mat<TYPE,dst_height, dst_weight, NPC1> &_dst);
+    
+computePyramid(xf::Mat<TYPE, HEIGHT, WIDTH, NPC1> &_src);
+```
+
+
